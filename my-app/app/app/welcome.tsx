@@ -1,8 +1,8 @@
-import { View, Text, StyleSheet, TouchableOpacity, Image } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { router, useLocalSearchParams } from 'expo-router';
 
-export default function Welcome() {
-  const { username, email } = useLocalSearchParams();
+export default function WelcomeScreen() {
+  const { username, email } = useLocalSearchParams<{ username: string; email: string }>();
 
   const handleLogout = () => {
     router.replace('/');
@@ -11,8 +11,9 @@ export default function Welcome() {
   return (
     <View style={styles.container}>
       <View style={styles.card}>
+        {/* Icon chào mừng */}
+        <Text style={styles.emoji}>🎉</Text>
 
-        
         <Text style={styles.title}>Chào mừng!</Text>
         <Text style={styles.subtitle}>Đăng nhập thành công</Text>
 
@@ -25,7 +26,7 @@ export default function Welcome() {
 
         {email && (
           <View style={styles.infoRow}>
-            <Text style={styles.infoLabel}>Email:</Text>
+            <Text style={styles.infoLabel}>📧 Email:</Text>
             <Text style={styles.infoValue}>{email}</Text>
           </View>
         )}
@@ -47,94 +48,90 @@ export default function Welcome() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#F06292', // nền hồng chủ đạo
+    backgroundColor: '#4CAF50',
     justifyContent: 'center',
-    padding: 24,
+    padding: 20,
   },
   card: {
-    backgroundColor: '#FFFFFF',
-    borderRadius: 24,
-    padding: 32,
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 30,
     alignItems: 'center',
-    shadowColor: '#F06292',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.2,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowColor: '#000',
+    shadowOpacity: 0.15,
+    shadowRadius: 15,
+    elevation: 8,
   },
   emoji: {
     fontSize: 64,
-    marginBottom: 16,
+    marginBottom: 15,
   },
   title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 'bold',
-    color: '#E91E63', // hồng đậm
+    color: '#333',
     marginBottom: 8,
   },
   subtitle: {
     fontSize: 16,
-    color: '#9D174D',
-    marginBottom: 24,
+    color: '#666',
+    marginBottom: 25,
   },
   infoBox: {
-    backgroundColor: '#FCE4EC', // hồng nhạt
-    borderRadius: 16,
-    padding: 20,
+    backgroundColor: '#E8F5E9',
+    borderRadius: 10,
+    padding: 15,
     width: '100%',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 15,
   },
   label: {
     fontSize: 14,
-    color: '#9D174D',
+    color: '#666',
   },
   username: {
-    fontSize: 24,
+    fontSize: 22,
     fontWeight: 'bold',
-    color: '#EC407A',
-    marginTop: 4,
+    color: '#4CAF50',
+    marginTop: 5,
   },
   infoRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 8,
+    marginBottom: 10,
   },
   infoLabel: {
     fontSize: 14,
-    color: '#9D174D',
+    color: '#666',
     marginRight: 8,
   },
   infoValue: {
     fontSize: 14,
-    color: '#4A044E',
+    color: '#333',
     fontWeight: '500',
   },
   divider: {
     height: 1,
-    backgroundColor: '#F3C1D6',
+    backgroundColor: '#E0E0E0',
     width: '100%',
     marginVertical: 20,
   },
   message: {
-    fontSize: 14,
-    color: '#9D174D',
     textAlign: 'center',
+    color: '#666',
+    fontSize: 14,
     lineHeight: 22,
-    marginBottom: 24,
+    marginBottom: 25,
   },
   button: {
-    backgroundColor: '#EC407A', // nút hồng nổi
-    paddingVertical: 14,
-    paddingHorizontal: 32,
-    borderRadius: 12,
-    width: '100%',
-    alignItems: 'center',
+    backgroundColor: '#f44336',
+    paddingVertical: 12,
+    paddingHorizontal: 40,
+    borderRadius: 10,
   },
   buttonText: {
-    color: '#FFFFFF',
+    color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
   },
 });
-

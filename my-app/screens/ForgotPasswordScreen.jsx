@@ -12,11 +12,13 @@ import {
 } from "react-native";
 import { useState } from "react";
 import { router } from "expo-router";
-import api from "../services/api";
+import { authService } from "../../services/authService";
+import { COLORS, FONTS, SIZES, SHADOWS } from "../../constants/theme";
+import { validateEmail, validatePhone, validatePassword } from "../../utils/validation";
 
-export default function ForgetPassword() {
-  const [step, setStep] = useState(1); // 1: nhập email/phone, 2: nhập OTP + mật khẩu mới
-  const [inputType, setInputType] = useState("email"); // email hoặc phone
+export default function ForgotPasswordScreen() {
+  const [step, setStep] = useState(1);
+  const [inputType, setInputType] = useState("email");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [otp, setOtp] = useState("");
@@ -24,29 +26,8 @@ export default function ForgetPassword() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Validate email
-  const validateEmail = (email) => {
-    const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return regex.test(email);
-  };
-
-  // Validate số điện thoại (10-11 số)
-  const validatePhone = (phone) => {
-    const regex = /^(0|\+84)[0-9]{9,10}$/;
-    return regex.test(phone);
-  };
-
-  // Validate mật khẩu
-  const validatePassword = (password) => {
-    if (password.length < 6) {
-      return { valid: false, message: "Mật khẩu phải có ít nhất 6 ký tự" };
-    }
-    return { valid: true };
-  };
-
   // Bước 1: Gửi OTP
   const handleSendOTP = async () => {
-    // Validate input
     if (inputType === "email") {
       if (!email) {
         Alert.alert("Thông báo", "Vui lòng nhập email");
@@ -69,11 +50,8 @@ export default function ForgetPassword() {
 
     setLoading(true);
     try {
-      const payload = inputType === "email" 
-        ? { email } 
-        : { phone };
-      
-      const res = await api.post("/forgot-password/send-otp", payload);
+      const payload = inputType === "email" ? { email } : { phone };
+      const res = await authService.sendOTP(payload);
       Alert.alert("Thành công", res.data.message || "Mã OTP đã được gửi!");
       setStep(2);
     } catch (err) {
@@ -88,13 +66,11 @@ export default function ForgetPassword() {
 
   // Bước 2: Xác minh OTP và đặt lại mật khẩu
   const handleResetPassword = async () => {
-    // Validate OTP
     if (!otp || otp.length !== 6) {
       Alert.alert("Thông báo", "Vui lòng nhập mã OTP 6 chữ số");
       return;
     }
 
-    // Validate mật khẩu mới
     if (!newPassword) {
       Alert.alert("Thông báo", "Vui lòng nhập mật khẩu mới");
       return;
@@ -106,7 +82,6 @@ export default function ForgetPassword() {
       return;
     }
 
-    // Validate xác nhận mật khẩu
     if (!confirmPassword) {
       Alert.alert("Thông báo", "Vui lòng xác nhận mật khẩu mới");
       return;
@@ -125,17 +100,12 @@ export default function ForgetPassword() {
         ...(inputType === "email" ? { email } : { phone }),
       };
 
-      const res = await api.post("/forgot-password/reset-password", payload);
-      
+      const res = await authService.resetPassword(payload);
+
       Alert.alert(
-        "Thành công", 
+        "Thành công",
         res.data.message || "Đặt lại mật khẩu thành công!",
-        [
-          {
-            text: "OK",
-            onPress: () => router.replace("/"),
-          },
-        ]
+        [{ text: "OK", onPress: () => router.replace("/") }]
       );
     } catch (err) {
       Alert.alert(
@@ -152,7 +122,7 @@ export default function ForgetPassword() {
     setLoading(true);
     try {
       const payload = inputType === "email" ? { email } : { phone };
-      await api.post("/forgot-password/send-otp", payload);
+      await authService.sendOTP(payload);
       Alert.alert("Thành công", "Mã OTP mới đã được gửi!");
     } catch (err) {
       Alert.alert(
@@ -177,18 +147,18 @@ export default function ForgetPassword() {
   };
 
   return (
-    <KeyboardAvoidingView 
+    <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <ScrollView 
+      <ScrollView
         contentContainerStyle={styles.scrollContent}
         keyboardShouldPersistTaps="handled"
       >
         <View style={styles.card}>
-          <Text style={styles.title}>Quên Mật Khẩu</Text>
+          <Text style={styles.title}>🔐 Quên Mật Khẩu</Text>
           <Text style={styles.subtitle}>
-            {step === 1 
+            {step === 1
               ? "Nhập email hoặc số điện thoại để nhận mã OTP"
               : "Nhập mã OTP và mật khẩu mới"}
           </Text>
@@ -196,7 +166,6 @@ export default function ForgetPassword() {
           {/* STEP 1: Nhập email/phone */}
           {step === 1 && (
             <>
-              {/* Toggle email/phone */}
               <View style={styles.toggleContainer}>
                 <TouchableOpacity
                   style={[
@@ -211,7 +180,7 @@ export default function ForgetPassword() {
                       inputType === "email" && styles.toggleTextActive,
                     ]}
                   >
-                    Email
+                    📧 Email
                   </Text>
                 </TouchableOpacity>
                 <TouchableOpacity
@@ -227,16 +196,15 @@ export default function ForgetPassword() {
                       inputType === "phone" && styles.toggleTextActive,
                     ]}
                   >
-                    Số điện thoại
+                    📱 Số điện thoại
                   </Text>
                 </TouchableOpacity>
               </View>
 
-              {/* Input email hoặc phone */}
               {inputType === "email" ? (
                 <TextInput
                   placeholder="Nhập email của bạn"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={COLORS.gray}
                   keyboardType="email-address"
                   autoCapitalize="none"
                   style={styles.input}
@@ -247,7 +215,7 @@ export default function ForgetPassword() {
               ) : (
                 <TextInput
                   placeholder="Nhập số điện thoại (VD: 0901234567)"
-                  placeholderTextColor="#999"
+                  placeholderTextColor={COLORS.gray}
                   keyboardType="phone-pad"
                   style={styles.input}
                   value={phone}
@@ -263,7 +231,7 @@ export default function ForgetPassword() {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={COLORS.white} />
                 ) : (
                   <Text style={styles.buttonText}>Gửi mã OTP</Text>
                 )}
@@ -285,7 +253,7 @@ export default function ForgetPassword() {
 
               <TextInput
                 placeholder="Nhập mã OTP (6 chữ số)"
-                placeholderTextColor="#999"
+                placeholderTextColor={COLORS.gray}
                 keyboardType="number-pad"
                 style={styles.input}
                 value={otp}
@@ -296,7 +264,7 @@ export default function ForgetPassword() {
 
               <TextInput
                 placeholder="Mật khẩu mới (ít nhất 6 ký tự)"
-                placeholderTextColor="#999"
+                placeholderTextColor={COLORS.gray}
                 secureTextEntry
                 style={styles.input}
                 value={newPassword}
@@ -306,7 +274,7 @@ export default function ForgetPassword() {
 
               <TextInput
                 placeholder="Xác nhận mật khẩu mới"
-                placeholderTextColor="#999"
+                placeholderTextColor={COLORS.gray}
                 secureTextEntry
                 style={styles.input}
                 value={confirmPassword}
@@ -320,7 +288,7 @@ export default function ForgetPassword() {
                 disabled={loading}
               >
                 {loading ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color={COLORS.white} />
                 ) : (
                   <Text style={styles.buttonText}>Đặt lại mật khẩu</Text>
                 )}
@@ -338,7 +306,6 @@ export default function ForgetPassword() {
             </>
           )}
 
-          {/* Nút quay lại */}
           <TouchableOpacity
             onPress={handleBack}
             style={styles.backButton}
@@ -357,131 +324,113 @@ export default function ForgetPassword() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFF0F6",
+    backgroundColor: COLORS.background,
   },
   scrollContent: {
     flexGrow: 1,
     justifyContent: "center",
-    padding: 24,
+    padding: SIZES.padding,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 22,
-    padding: 24,
-    shadowColor: "#F06292",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.15,
-    shadowRadius: 12,
-    elevation: 6,
+    backgroundColor: COLORS.white,
+    borderRadius: SIZES.radius,
+    padding: SIZES.padding,
+    ...SHADOWS.medium,
   },
   title: {
-    fontSize: 26,
-    fontWeight: "700",
+    fontSize: FONTS.sizes.xxl,
+    fontWeight: FONTS.weights.bold,
     textAlign: "center",
-    color: "#E91E63",
-    marginBottom: 6,
+    color: COLORS.text,
+    marginBottom: SIZES.margin * 0.5,
   },
   subtitle: {
-    fontSize: 14,
-    color: "#888",
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.darkGray,
     textAlign: "center",
-    marginBottom: 24,
+    marginBottom: SIZES.margin * 1.5,
   },
-
-  /* Toggle */
   toggleContainer: {
     flexDirection: "row",
-    marginBottom: 20,
-    borderRadius: 14,
-    backgroundColor: "#FCE4EC",
+    marginBottom: SIZES.margin * 1.25,
+    borderRadius: SIZES.radius * 0.6,
+    backgroundColor: COLORS.inputBg,
     padding: 4,
   },
   toggleButton: {
     flex: 1,
-    paddingVertical: 12,
+    paddingVertical: SIZES.padding * 0.6,
     alignItems: "center",
-    borderRadius: 12,
+    borderRadius: SIZES.radius * 0.5,
   },
   toggleButtonActive: {
-    backgroundColor: "#F06292",
+    backgroundColor: COLORS.primary,
   },
   toggleText: {
-    fontSize: 14,
-    color: "#C2185B",
-    fontWeight: "500",
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.darkGray,
+    fontWeight: FONTS.weights.medium,
   },
   toggleTextActive: {
-    color: "#fff",
-    fontWeight: "700",
+    color: COLORS.white,
+    fontWeight: FONTS.weights.bold,
   },
-
-  /* Input */
   input: {
-    backgroundColor: "#FFF5F8",
-    borderRadius: 14,
-    padding: 14,
-    fontSize: 16,
-    marginBottom: 14,
+    backgroundColor: COLORS.inputBg,
+    borderRadius: SIZES.radius * 0.6,
+    padding: SIZES.padding * 0.7,
+    fontSize: FONTS.sizes.md,
+    marginBottom: SIZES.margin,
     borderWidth: 1,
-    borderColor: "#F3C1D6",
-    color: "#333",
+    borderColor: COLORS.border,
   },
-
-  /* Button */
   button: {
-    backgroundColor: "#F06292",
-    paddingVertical: 14,
-    borderRadius: 14,
+    backgroundColor: COLORS.primary,
+    paddingVertical: SIZES.padding * 0.7,
+    borderRadius: SIZES.radius * 0.6,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: SIZES.margin * 0.5,
   },
   buttonDisabled: {
-    backgroundColor: "#F8BBD0",
+    backgroundColor: COLORS.primaryLight,
   },
   buttonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "700",
+    color: COLORS.white,
+    fontSize: FONTS.sizes.md,
+    fontWeight: FONTS.weights.bold,
   },
-
-  /* Info box */
   infoBox: {
-    backgroundColor: "#FCE4EC",
-    padding: 12,
-    borderRadius: 12,
-    marginBottom: 16,
+    backgroundColor: COLORS.infoBg,
+    padding: SIZES.padding * 0.6,
+    borderRadius: SIZES.radius * 0.5,
+    marginBottom: SIZES.margin,
   },
   infoText: {
-    fontSize: 13,
-    color: "#555",
+    fontSize: FONTS.sizes.sm,
+    color: COLORS.darkGray,
     textAlign: "center",
   },
   infoHighlight: {
-    fontWeight: "700",
-    color: "#E91E63",
+    fontWeight: FONTS.weights.bold,
+    color: COLORS.primary,
   },
-
-  /* Resend */
   resendButton: {
-    marginTop: 16,
+    marginTop: SIZES.margin,
     alignItems: "center",
   },
   resendText: {
-    color: "#E91E63",
-    fontSize: 14,
-    fontWeight: "500",
+    color: COLORS.primary,
+    fontSize: FONTS.sizes.sm,
   },
-
-  /* Back */
   backButton: {
-    marginTop: 20,
-    paddingTop: 16,
+    marginTop: SIZES.margin * 1.25,
+    paddingTop: SIZES.padding * 0.8,
     borderTopWidth: 1,
-    borderTopColor: "#F3C1D6",
+    borderTopColor: COLORS.border,
     alignItems: "center",
   },
   backText: {
-    color: "#888",
-    fontSize: 14,
+    color: COLORS.darkGray,
+    fontSize: FONTS.sizes.sm,
   },
 });
