@@ -1,87 +1,96 @@
-import { 
-  View, 
-  Text, 
-  TextInput, 
-  TouchableOpacity, 
-  StyleSheet, 
+import {
+  View,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  StyleSheet,
   Alert,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-} from 'react-native';
-import { router } from 'expo-router';
-import { useState } from 'react';
-import api from '../services/api';
+} from "react-native";
+import { useState } from "react";
+import api from "../services/api";
 
-export default function RegisterScreen() {
-  const [step, setStep] = useState(1); // 1: Nhập email, 2: Nhập OTP + thông tin
-  const [email, setEmail] = useState('');
-  const [otp, setOtp] = useState('');
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
+export default function RegisterScreen({ navigation }: any) {
+  const [step, setStep] = useState(1); // 1: Email, 2: OTP + info
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
   // Bước 1: Gửi OTP
   const handleSendOTP = async () => {
     if (!email) {
-      Alert.alert('Lỗi', 'Vui lòng nhập email');
+      Alert.alert("Lỗi", "Vui lòng nhập email");
       return;
     }
 
     setLoading(true);
     try {
-      const res = await api.post('/register/send-otp', { email });
-      Alert.alert('Thành công', res.data.message || 'OTP đã được gửi tới email');
+      const res = await api.post("/register/send-otp", { email });
+      Alert.alert("Thành công", res.data.message || "OTP đã được gửi tới email");
       setStep(2);
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.response?.data?.message || 'Không thể gửi OTP');
+      Alert.alert(
+        "Lỗi",
+        err?.response?.data?.message || "Không thể gửi OTP"
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Bước 2: Xác minh OTP và đăng ký
+  // Bước 2: Xác minh OTP & đăng ký
   const handleRegister = async () => {
     if (!otp || otp.length !== 6) {
-      Alert.alert('Lỗi', 'Vui lòng nhập mã OTP 6 số');
+      Alert.alert("Lỗi", "Vui lòng nhập mã OTP 6 số");
       return;
     }
 
     if (!username) {
-      Alert.alert('Lỗi', 'Vui lòng nhập username');
+      Alert.alert("Lỗi", "Vui lòng nhập username");
       return;
     }
 
     if (!password) {
-      Alert.alert('Lỗi', 'Vui lòng nhập mật khẩu');
+      Alert.alert("Lỗi", "Vui lòng nhập mật khẩu");
       return;
     }
 
     if (password.length < 6) {
-      Alert.alert('Lỗi', 'Mật khẩu phải có ít nhất 6 ký tự');
+      Alert.alert("Lỗi", "Mật khẩu phải có ít nhất 6 ký tự");
       return;
     }
 
     if (password !== confirmPassword) {
-      Alert.alert('Lỗi', 'Mật khẩu xác nhận không khớp');
+      Alert.alert("Lỗi", "Mật khẩu xác nhận không khớp");
       return;
     }
 
     setLoading(true);
     try {
-      await api.post('/register', { 
-        username, 
-        email, 
-        password, 
-        otp 
+      await api.post("/register", {
+        username,
+        email,
+        password,
+        otp,
       });
-      Alert.alert('Thành công', 'Đăng ký thành công!', [
-        { text: 'OK', onPress: () => router.replace('/') }
+
+      Alert.alert("Thành công", "Đăng ký thành công!", [
+        {
+          text: "OK",
+          onPress: () => navigation.replace("Login"),
+        },
       ]);
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.response?.data?.message || 'Đăng ký thất bại');
+      Alert.alert(
+        "Lỗi",
+        err?.response?.data?.message || "Đăng ký thất bại"
+      );
     } finally {
       setLoading(false);
     }
@@ -91,10 +100,13 @@ export default function RegisterScreen() {
   const handleResendOTP = async () => {
     setLoading(true);
     try {
-      await api.post('/register/send-otp', { email });
-      Alert.alert('Thành công', 'Mã OTP mới đã được gửi!');
+      await api.post("/register/send-otp", { email });
+      Alert.alert("Thành công", "Mã OTP mới đã được gửi!");
     } catch (err: any) {
-      Alert.alert('Lỗi', err?.response?.data?.message || 'Không thể gửi lại OTP');
+      Alert.alert(
+        "Lỗi",
+        err?.response?.data?.message || "Không thể gửi lại OTP"
+      );
     } finally {
       setLoading(false);
     }
@@ -104,27 +116,27 @@ export default function RegisterScreen() {
   const handleBack = () => {
     if (step === 2) {
       setStep(1);
-      setOtp('');
-      setUsername('');
-      setPassword('');
-      setConfirmPassword('');
+      setOtp("");
+      setUsername("");
+      setPassword("");
+      setConfirmPassword("");
     } else {
-      router.replace('/');
+      navigation.replace("Login");
     }
   };
 
   return (
     <KeyboardAvoidingView
       style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       <ScrollView contentContainerStyle={styles.scrollContainer}>
         <View style={styles.card}>
           <Text style={styles.title}>Đăng ký tài khoản</Text>
           <Text style={styles.subtitle}>
-            {step === 1 
-              ? 'Nhập email để nhận mã OTP' 
-              : 'Nhập mã OTP và thông tin tài khoản'}
+            {step === 1
+              ? "Nhập email để nhận mã OTP"
+              : "Nhập mã OTP và thông tin tài khoản"}
           </Text>
 
           {step === 1 ? (
@@ -140,8 +152,8 @@ export default function RegisterScreen() {
                 editable={!loading}
               />
 
-              <TouchableOpacity 
-                style={[styles.button, loading && styles.buttonDisabled]} 
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleSendOTP}
                 disabled={loading}
               >
@@ -199,8 +211,8 @@ export default function RegisterScreen() {
                 editable={!loading}
               />
 
-              <TouchableOpacity 
-                style={[styles.button, loading && styles.buttonDisabled]} 
+              <TouchableOpacity
+                style={[styles.button, loading && styles.buttonDisabled]}
                 onPress={handleRegister}
                 disabled={loading}
               >
@@ -211,8 +223,8 @@ export default function RegisterScreen() {
                 )}
               </TouchableOpacity>
 
-              <TouchableOpacity 
-                style={styles.resendButton} 
+              <TouchableOpacity
+                style={styles.resendButton}
                 onPress={handleResendOTP}
                 disabled={loading}
               >
@@ -223,7 +235,7 @@ export default function RegisterScreen() {
 
           <TouchableOpacity style={styles.backButton} onPress={handleBack}>
             <Text style={styles.backText}>
-              {step === 1 ? 'Đã có tài khoản? Đăng nhập' : 'Quay lại'}
+              {step === 1 ? "Đã có tài khoản? Đăng nhập" : "Quay lại"}
             </Text>
           </TouchableOpacity>
         </View>
@@ -231,88 +243,97 @@ export default function RegisterScreen() {
     </KeyboardAvoidingView>
   );
 }
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#FCE9F2", // Hồng pha lavender rất nhạt
   },
   scrollContainer: {
     flexGrow: 1,
-    justifyContent: 'center',
+    justifyContent: "center",
     padding: 20,
   },
   card: {
-    backgroundColor: '#fff',
-    borderRadius: 20,
-    padding: 25,
-    shadowColor: '#000',
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    backgroundColor: "#FFF8FB", // Trắng hồng sương
+    borderRadius: 24,
+    padding: 28,
+    shadowColor: "#D487A6",
+    shadowOpacity: 0.22,
+    shadowRadius: 14,
+    elevation: 7,
+    borderWidth: 1.5,
+    borderColor: "#EFB6CD",
   },
   title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    textAlign: 'center',
-    color: '#333',
-    marginBottom: 8,
+    fontSize: 26,
+    fontWeight: "bold",
+    textAlign: "center",
+    color: "#C23A7E", // Hồng tím berry
+    marginBottom: 6,
   },
   subtitle: {
-    textAlign: 'center',
-    color: '#666',
-    marginBottom: 25,
+    textAlign: "center",
+    color: "#A86C8F",
+    marginBottom: 26,
+    fontSize: 15,
   },
   emailInfo: {
-    flexDirection: 'row',
-    backgroundColor: '#E8F5E9',
+    flexDirection: "row",
+    backgroundColor: "#FDEFF6",
     padding: 12,
-    borderRadius: 10,
-    marginBottom: 15,
+    borderRadius: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E9B3C9",
   },
   emailLabel: {
-    color: '#666',
+    color: "#A86C8F",
+    fontWeight: "600",
   },
   emailValue: {
-    color: '#4CAF50',
-    fontWeight: 'bold',
+    color: "#C23A7E",
+    fontWeight: "bold",
   },
   input: {
-    backgroundColor: '#f5f5f5',
-    borderRadius: 10,
+    backgroundColor: "#FDEFF6",
+    borderRadius: 14,
     padding: 15,
     fontSize: 16,
-    marginBottom: 15,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#E9B3C9",
+    color: "#8F2E5F",
   },
   button: {
-    backgroundColor: '#4CAF50',
+    backgroundColor: "#E05A96", // Rose tím đậm
     paddingVertical: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
+    borderRadius: 14,
+    alignItems: "center",
+    marginTop: 12,
   },
   buttonDisabled: {
-    backgroundColor: '#81C784',
+    backgroundColor: "#F0A7C5",
   },
   buttonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: 'bold',
+    color: "#FFFFFF",
+    fontSize: 17,
+    fontWeight: "bold",
   },
   resendButton: {
-    marginTop: 15,
-    alignItems: 'center',
+    marginTop: 16,
+    alignItems: "center",
   },
   resendText: {
-    color: '#4CAF50',
+    color: "#C23A7E",
     fontSize: 14,
+    textDecorationLine: "underline",
   },
   backButton: {
-    marginTop: 20,
-    alignItems: 'center',
+    marginTop: 22,
+    alignItems: "center",
   },
   backText: {
-    color: '#666',
+    color: "#A86C8F",
     fontSize: 14,
   },
 });

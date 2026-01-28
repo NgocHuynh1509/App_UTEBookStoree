@@ -114,6 +114,7 @@ router.post('/register',  verifyOtpLimiter, async (req, res) => {
       email: email || null,
       phone: phone || null,
       password: hashedPassword,
+      role: email === 'admin@gmail.com' ? 'admin' : 'user'
     },
     (err) => {
       if (err) {
@@ -156,6 +157,7 @@ router.post('/login',  loginLimiter,  (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
+        role: user.role,
       },
     });
   });
@@ -186,8 +188,8 @@ router.post('/forgot-password/send-otp',  sendOtpLimiter,  async (req, res) => {
 
   // Kiểm tra user tồn tại (tìm theo email)
   // Nếu dùng phone, cần thêm hàm findByPhone trong User model
-  const findUser = email 
-    ? User.findByEmail 
+  const findUser = email
+    ? User.findByEmail
     : User.findByPhone || User.findByEmail; // fallback nếu chưa có findByPhone
 
   findUser(identifier, async (err, user) => {
@@ -196,9 +198,9 @@ router.post('/forgot-password/send-otp',  sendOtpLimiter,  async (req, res) => {
     }
 
     if (!user) {
-      return res.status(404).json({ 
-        message: identifierType === 'email' 
-          ? 'Email không tồn tại trong hệ thống' 
+      return res.status(404).json({
+        message: identifierType === 'email'
+          ? 'Email không tồn tại trong hệ thống'
           : 'Số điện thoại không tồn tại trong hệ thống'
       });
     }
@@ -223,7 +225,7 @@ router.post('/forgot-password/send-otp',  sendOtpLimiter,  async (req, res) => {
 
     console.log(`✅ OTP đã tạo cho ${identifierType}: ${identifier} => ${otp}`);
 
-    res.json({ 
+    res.json({
       message: identifierType === 'email'
         ? 'Mã OTP đã được gửi đến email của bạn'
         : 'Mã OTP đã được gửi đến số điện thoại của bạn'

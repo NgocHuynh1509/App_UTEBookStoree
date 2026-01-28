@@ -11,10 +11,9 @@ import {
   ScrollView,
 } from "react-native";
 import { useState } from "react";
-import { router } from "expo-router";
 import api from "../services/api";
 
-export default function ForgotPasswordScreen() {
+export default function ForgotPasswordScreen({ navigation }: any) {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState("");
   const [otp, setOtp] = useState("");
@@ -77,12 +76,18 @@ export default function ForgotPasswordScreen() {
       Alert.alert(
         "Thành công",
         res.data.message || "Đặt lại mật khẩu thành công!",
-        [{ text: "OK", onPress: () => router.replace("/") }]
+        [
+          {
+            text: "OK",
+            onPress: () => navigation.replace("Login"),
+          },
+        ]
       );
     } catch (err: any) {
       Alert.alert(
         "Lỗi",
-        err?.response?.data?.message || "Không thể đặt lại mật khẩu. Vui lòng thử lại."
+        err?.response?.data?.message ||
+          "Không thể đặt lại mật khẩu. Vui lòng thử lại."
       );
     } finally {
       setLoading(false);
@@ -105,7 +110,7 @@ export default function ForgotPasswordScreen() {
     }
   };
 
-  // Reset form
+  // Quay lại
   const handleBack = () => {
     if (step === 2) {
       setStep(1);
@@ -113,7 +118,7 @@ export default function ForgotPasswordScreen() {
       setNewPassword("");
       setConfirmPassword("");
     } else {
-      router.replace("/");
+      navigation.replace("Login");
     }
   };
 
@@ -222,10 +227,11 @@ export default function ForgotPasswordScreen() {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#FFEAF2", // Hồng đào rất nhạt
   },
   scrollContainer: {
     flexGrow: 1,
@@ -233,62 +239,69 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 20,
-    padding: 25,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 10,
-    elevation: 5,
+    backgroundColor: "#FFF7FA", // Trắng pha hồng
+    borderRadius: 24,
+    padding: 26,
+    shadowColor: "#E48FB1",
+    shadowOpacity: 0.22,
+    shadowRadius: 18,
+    elevation: 7,
+    borderWidth: 1.5,
+    borderColor: "#F3B2C8",
   },
   title: {
-    fontSize: 24,
+    fontSize: 26,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#333",
-    marginBottom: 8,
+    color: "#C93A7A", // Hồng berry đậm
+    marginBottom: 10,
   },
   subtitle: {
     textAlign: "center",
-    color: "#666",
-    marginBottom: 25,
+    color: "#B76C8A",
+    marginBottom: 26,
+    fontSize: 15,
   },
   input: {
-    backgroundColor: "#f5f5f5",
-    borderRadius: 10,
+    backgroundColor: "#FFEFF5",
+    borderRadius: 14,
     padding: 15,
     fontSize: 16,
-    marginBottom: 15,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "#F0A9C3",
+    color: "#9E2F5F",
   },
   button: {
-    backgroundColor: "#6C63FF",
+    backgroundColor: "#E94E89", // Hồng rose đậm
     paddingVertical: 15,
-    borderRadius: 10,
+    borderRadius: 14,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 12,
   },
   buttonDisabled: {
-    backgroundColor: "#A5A0FF",
+    backgroundColor: "#F2A7C3",
   },
   buttonText: {
-    color: "#fff",
+    color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "bold",
   },
   resendButton: {
-    marginTop: 15,
+    marginTop: 18,
     alignItems: "center",
   },
   resendText: {
-    color: "#6C63FF",
+    color: "#C93A7A",
     fontSize: 14,
+    textDecorationLine: "underline",
   },
   backButton: {
-    marginTop: 20,
+    marginTop: 22,
     alignItems: "center",
   },
   backText: {
-    color: "#666",
+    color: "#B76C8A",
     fontSize: 14,
   },
 });

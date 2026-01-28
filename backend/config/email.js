@@ -44,58 +44,57 @@ async function sendOTPEmail(toEmail, otp) {
     from: EMAIL_FROM,
     to: toEmail,
     subject: 'Mã OTP của bạn',
-    html: `
-      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
 
-        <div style="
-          background: linear-gradient(135deg, #F06292 0%, #EC407A 100%);
-          padding: 30px;
-          border-radius: 12px 12px 0 0;
-        ">
-          <h1 style="
-            color: white;
-            margin: 0;
-            text-align: center;
-            font-size: 26px;
-          ">
-            Xác Minh Bảo Mật
-          </h1>
-        </div>
+            <div style="
+              background: linear-gradient(135deg, #F06292 0%, #EC407A 100%);
+              padding: 30px;
+              border-radius: 12px 12px 0 0;
+            ">
+              <h1 style="
+                color: white;
+                margin: 0;
+                text-align: center;
+                font-size: 26px;
+              ">
+                Xác Minh Bảo Mật
+              </h1>
+            </div>
 
-        <div style="
-          background: #FFF0F6;
-          padding: 30px;
-          border-radius: 0 0 12px 12px;
-          border: 1px solid #F8BBD0;
-          border-top: none;
-        ">
-          <p>Xin chào,</p>
-          <p>Mã OTP của bạn là:</p>
+            <div style="
+              background: #FFF0F6;
+              padding: 30px;
+              border-radius: 0 0 12px 12px;
+              border: 1px solid #F8BBD0;
+              border-top: none;
+            ">
+              <p>Xin chào,</p>
+              <p>Mã OTP của bạn là:</p>
 
-          <div style="
-            background: #F06292;
-            color: #fff;
-            font-size: 34px;
-            font-weight: bold;
-            text-align: center;
-            padding: 22px;
-            border-radius: 14px;
-            letter-spacing: 10px;
-            margin: 24px 0;
-          ">
-            ${otp}
+              <div style="
+                background: #F06292;
+                color: #fff;
+                font-size: 34px;
+                font-weight: bold;
+                text-align: center;
+                padding: 22px;
+                border-radius: 14px;
+                letter-spacing: 10px;
+                margin: 24px 0;
+              ">
+                ${otp}
+              </div>
+
+              <p>Mã có hiệu lực trong 10 phút.</p>
+
+              <p style="font-size: 12px; color: #999; text-align: center;">
+                Email được gửi tự động, vui lòng không trả lời.
+              </p>
+            </div>
           </div>
-
-          <p>Mã có hiệu lực trong 10 phút.</p>
-
-          <p style="font-size: 12px; color: #999; text-align: center;">
-            Email được gửi tự động, vui lòng không trả lời.
-          </p>
-        </div>
-      </div>
-    `
+        `
   };
-
 
   try {
     const info = await transporter.sendMail(mailOptions);
