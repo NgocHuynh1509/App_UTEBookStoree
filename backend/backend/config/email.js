@@ -43,57 +43,34 @@ async function sendOTPEmail(toEmail, otp) {
   const mailOptions = {
     from: EMAIL_FROM,
     to: toEmail,
-    subject: 'Mã OTP của bạn',
-        html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-
-            <div style="
-              background: linear-gradient(135deg, #F06292 0%, #EC407A 100%);
-              padding: 30px;
-              border-radius: 12px 12px 0 0;
-            ">
-              <h1 style="
-                color: white;
-                margin: 0;
-                text-align: center;
-                font-size: 26px;
-              ">
-                Xác Minh Bảo Mật
-              </h1>
-            </div>
-
-            <div style="
-              background: #FFF0F6;
-              padding: 30px;
-              border-radius: 0 0 12px 12px;
-              border: 1px solid #F8BBD0;
-              border-top: none;
-            ">
-              <p>Xin chào,</p>
-              <p>Mã OTP của bạn là:</p>
-
-              <div style="
-                background: #F06292;
-                color: #fff;
-                font-size: 34px;
-                font-weight: bold;
-                text-align: center;
-                padding: 22px;
-                border-radius: 14px;
-                letter-spacing: 10px;
-                margin: 24px 0;
-              ">
-                ${otp}
-              </div>
-
-              <p>Mã có hiệu lực trong 10 phút.</p>
-
-              <p style="font-size: 12px; color: #999; text-align: center;">
-                Email được gửi tự động, vui lòng không trả lời.
-              </p>
-            </div>
+    subject: '🔐 Mã OTP Đặt Lại Mật Khẩu',
+    html: `
+      <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 30px; border-radius: 10px 10px 0 0;">
+          <h1 style="color: white; margin: 0; text-align: center;">🔐 Đặt Lại Mật Khẩu</h1>
+        </div>
+        
+        <div style="background: #f9f9f9; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #ddd; border-top: none;">
+          <p style="font-size: 16px; color: #333;">Xin chào,</p>
+          <p style="font-size: 16px; color: #333;">Bạn đã yêu cầu đặt lại mật khẩu. Đây là mã OTP của bạn:</p>
+          
+          <div style="background: #667eea; color: white; font-size: 32px; font-weight: bold; 
+                      text-align: center; padding: 20px; border-radius: 10px; 
+                      letter-spacing: 8px; margin: 20px 0;">
+            ${otp}
           </div>
-        `
+          
+          <p style="font-size: 14px; color: #666;">⏰ Mã này có hiệu lực trong <strong>10 phút</strong>.</p>
+          <p style="font-size: 14px; color: #666;">🚫 Nếu bạn không yêu cầu đặt lại mật khẩu, hãy bỏ qua email này.</p>
+          
+          <hr style="border: none; border-top: 1px solid #ddd; margin: 20px 0;">
+          
+          <p style="font-size: 12px; color: #999; text-align: center;">
+            Email này được gửi tự động, vui lòng không trả lời.
+          </p>
+        </div>
+      </div>
+    `
   };
 
   try {
