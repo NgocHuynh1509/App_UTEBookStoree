@@ -32,7 +32,7 @@ export default function LoginScreen({ navigation }: any) {
       });
 
       // 👉 Điều hướng đúng chuẩn
-      navigation.replace("Home");
+      navigation.replace("MainTabs");
     } catch {
       Alert.alert("Đăng nhập thất bại", "Sai email hoặc mật khẩu");
     }
@@ -86,74 +86,75 @@ export default function LoginScreen({ navigation }: any) {
     </View>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFE8EF", // Hồng nude rất nhạt
+    backgroundColor: "#FFD6E7", // Hồng pastel
     justifyContent: "center",
     padding: 20,
   },
   card: {
-    backgroundColor: "#FFF7FA", // Trắng hồng sữa
-    borderRadius: 24,
+    backgroundColor: "#FFF0F6", // Hồng nhẹ
+    borderRadius: 25,
     padding: 28,
-    shadowColor: "#D98AA8",
-    shadowOpacity: 0.22,
-    shadowRadius: 14,
-    elevation: 7,
-    borderWidth: 1.5,
-    borderColor: "#F2B4C8",
+    shadowColor: "#FF8BB3",
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: "#FFB6D9",
   },
   title: {
     fontSize: 26,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#C73776", // Hồng berry trầm
-    marginBottom: 6,
+    color: "#FF4F9A",
+    marginBottom: 5,
   },
   subtitle: {
     textAlign: "center",
-    color: "#B0728F",
+    color: "#D46A9E",
     marginBottom: 30,
     fontSize: 15,
   },
   input: {
-    backgroundColor: "#FFEFF5",
-    borderRadius: 14,
+    backgroundColor: "#FFE6F2",
+    borderRadius: 12,
     padding: 15,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 15,
     borderWidth: 1,
-    borderColor: "#EFB2C6",
-    color: "#9B2C5F",
+    borderColor: "#FFB6D9",
+    color: "#D62478",
   },
   button: {
-    backgroundColor: "#E5568C", // Rose đậm
+    backgroundColor: "#FF5CA8",
     paddingVertical: 15,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 10,
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontSize: 17,
     fontWeight: "bold",
   },
   forgotText: {
     textAlign: "center",
-    marginTop: 16,
-    color: "#C73776",
+    marginTop: 15,
+    color: "#FF4F9A",
     fontSize: 14,
     textDecorationLine: "underline",
   },
   footerText: {
     textAlign: "center",
-    marginTop: 22,
-    color: "#B0728F",
+    marginTop: 20,
+    color: "#D46A9E",
     fontSize: 14,
   },
   link: {
-    color: "#C73776",
+    color: "#FF4F9A",
     fontWeight: "bold",
     textDecorationLine: "underline",
   },

@@ -243,10 +243,11 @@ export default function RegisterScreen({ navigation }: any) {
     </KeyboardAvoidingView>
   );
 }
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FCE9F2", // Hồng pha lavender rất nhạt
+    backgroundColor: "#FFD6E7", // Hồng pastel
   },
   scrollContainer: {
     flexGrow: 1,
@@ -254,86 +255,86 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: "#FFF8FB", // Trắng hồng sương
-    borderRadius: 24,
+    backgroundColor: "#FFF0F6",
+    borderRadius: 25,
     padding: 28,
-    shadowColor: "#D487A6",
-    shadowOpacity: 0.22,
-    shadowRadius: 14,
-    elevation: 7,
-    borderWidth: 1.5,
-    borderColor: "#EFB6CD",
+    shadowColor: "#FF8BB3",
+    shadowOpacity: 0.25,
+    shadowRadius: 12,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: "#FFB6D9",
   },
   title: {
     fontSize: 26,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#C23A7E", // Hồng tím berry
-    marginBottom: 6,
+    color: "#FF4F9A",
+    marginBottom: 5,
   },
   subtitle: {
     textAlign: "center",
-    color: "#A86C8F",
-    marginBottom: 26,
+    color: "#D46A9E",
+    marginBottom: 25,
     fontSize: 15,
   },
   emailInfo: {
     flexDirection: "row",
-    backgroundColor: "#FDEFF6",
+    backgroundColor: "#FFE6F2",
     padding: 12,
-    borderRadius: 14,
-    marginBottom: 16,
+    borderRadius: 12,
+    marginBottom: 15,
     borderWidth: 1,
-    borderColor: "#E9B3C9",
+    borderColor: "#FFB6D9",
   },
   emailLabel: {
-    color: "#A86C8F",
+    color: "#D46A9E",
     fontWeight: "600",
   },
   emailValue: {
-    color: "#C23A7E",
+    color: "#FF4F9A",
     fontWeight: "bold",
   },
   input: {
-    backgroundColor: "#FDEFF6",
-    borderRadius: 14,
+    backgroundColor: "#FFE6F2",
+    borderRadius: 12,
     padding: 15,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 15,
     borderWidth: 1,
-    borderColor: "#E9B3C9",
-    color: "#8F2E5F",
+    borderColor: "#FFB6D9",
+    color: "#D62478",
   },
   button: {
-    backgroundColor: "#E05A96", // Rose tím đậm
+    backgroundColor: "#FF5CA8",
     paddingVertical: 15,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: "#F0A7C5",
+    backgroundColor: "#FF9ACB",
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontSize: 17,
     fontWeight: "bold",
   },
   resendButton: {
-    marginTop: 16,
+    marginTop: 15,
     alignItems: "center",
   },
   resendText: {
-    color: "#C23A7E",
+    color: "#FF4F9A",
     fontSize: 14,
     textDecorationLine: "underline",
   },
   backButton: {
-    marginTop: 22,
+    marginTop: 20,
     alignItems: "center",
   },
   backText: {
-    color: "#A86C8F",
+    color: "#D46A9E",
     fontSize: 14,
   },
 });

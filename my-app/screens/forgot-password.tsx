@@ -231,7 +231,7 @@ export default function ForgotPasswordScreen({ navigation }: any) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFEAF2", // Hồng đào rất nhạt
+    backgroundColor: "#FFD6E7", // Hồng pastel
   },
   scrollContainer: {
     flexGrow: 1,
@@ -239,69 +239,69 @@ const styles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: "#FFF7FA", // Trắng pha hồng
-    borderRadius: 24,
-    padding: 26,
-    shadowColor: "#E48FB1",
-    shadowOpacity: 0.22,
-    shadowRadius: 18,
-    elevation: 7,
-    borderWidth: 1.5,
-    borderColor: "#F3B2C8",
+    backgroundColor: "#FFF0F6", // Hồng nhẹ
+    borderRadius: 25,
+    padding: 25,
+    shadowColor: "#FF8BB3",
+    shadowOpacity: 0.25,
+    shadowRadius: 15,
+    elevation: 8,
+    borderWidth: 2,
+    borderColor: "#FFB6D9",
   },
   title: {
     fontSize: 26,
     fontWeight: "bold",
     textAlign: "center",
-    color: "#C93A7A", // Hồng berry đậm
+    color: "#FF4F9A",
     marginBottom: 10,
   },
   subtitle: {
     textAlign: "center",
-    color: "#B76C8A",
-    marginBottom: 26,
+    color: "#D46A9E",
+    marginBottom: 25,
     fontSize: 15,
   },
   input: {
-    backgroundColor: "#FFEFF5",
-    borderRadius: 14,
+    backgroundColor: "#FFE6F2",
+    borderRadius: 12,
     padding: 15,
     fontSize: 16,
-    marginBottom: 16,
+    marginBottom: 15,
     borderWidth: 1,
-    borderColor: "#F0A9C3",
-    color: "#9E2F5F",
+    borderColor: "#FFB6D9",
+    color: "#D62478",
   },
   button: {
-    backgroundColor: "#E94E89", // Hồng rose đậm
+    backgroundColor: "#FF5CA8",
     paddingVertical: 15,
-    borderRadius: 14,
+    borderRadius: 12,
     alignItems: "center",
-    marginTop: 12,
+    marginTop: 10,
   },
   buttonDisabled: {
-    backgroundColor: "#F2A7C3",
+    backgroundColor: "#FF9AC9",
   },
   buttonText: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontSize: 16,
     fontWeight: "bold",
   },
   resendButton: {
-    marginTop: 18,
+    marginTop: 15,
     alignItems: "center",
   },
   resendText: {
-    color: "#C93A7A",
+    color: "#FF4F9A",
     fontSize: 14,
     textDecorationLine: "underline",
   },
   backButton: {
-    marginTop: 22,
+    marginTop: 20,
     alignItems: "center",
   },
   backText: {
-    color: "#B76C8A",
+    color: "#D46A9E",
     fontSize: 14,
   },
 });
