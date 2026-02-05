@@ -11,76 +11,78 @@ import { Ionicons } from "@expo/vector-icons";
 import { useAuth } from "../hooks/useAuth";
 import { useEffect, useState } from "react";
 import api from "../services/api";
+import { FlatList } from "react-native";
+
 
 export default function HomeScreen({ navigation }: any) {
   const { user } = useAuth();
 
-  const [books, setBooks] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
+  const [books, setBooks] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loadingBooks, setLoadingBooks] = useState(true);
   const [loadingCategories, setLoadingCategories] = useState(true);
   const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState<number | null>(null);
-  const [suggestions, setSuggestions] = useState<any[]>([]);
+  const [categoryFilter, setCategoryFilter] = useState(null);
+  const [suggestions, setSuggestions] = useState([]);
   const [showSuggest, setShowSuggest] = useState(false);
+  const [bestSellers, setBestSellers] = useState([]);
+  const [loadingBest, setLoadingBest] = useState(true);
+  const [topDiscounts, setTopDiscounts] = useState([]);
+  const [loadingDiscount, setLoadingDiscount] = useState(true);
 
-  // 🎀 Pink theme palette
-  const COLORS = {
-    bg: "#FFF5F8",
-    primary: "#FF7EB6",
-    primaryDark: "#D63384",
-    soft: "#FFE4EC",
-    card: "#FFFFFF",
-    text: "#222",
-    sub: "#666",
-    muted: "#999",
-    border: "#F3D7E3",
-    price: "#FF5C8A",
-  };
 
-  const formatPrice = (price: any) => {
+
+  const formatPrice = (price) => {
     return Number(price).toLocaleString("vi-VN") + " VNĐ";
   };
 
-  const loadBooks = async () => {
-    setLoadingBooks(true);
 
-    try {
-      let params: any = {};
 
-      if (categoryFilter) {
-        params.category = categoryFilter;
-      } else if (search.trim() !== "") {
-        params.search = search;
+
+    const loadBooks = async () => {
+      setLoadingBooks(true);
+
+      try {
+        let params: any = {};
+
+        if (categoryFilter) {
+          params.category = categoryFilter;
+        }
+        else if (search.trim() !== "") {
+          params.search = search;
+        }
+
+        const res = await api.get("/books", { params });
+        setBooks(res.data);
+
+      } catch (err) {
+        console.log("Lỗi load sách:", err);
+      } finally {
+        setLoadingBooks(false);
+      }
+    };
+
+    const loadSuggestions = async (text) => {
+      if (text.trim() === "") {
+        setSuggestions([]);
+        setShowSuggest(false);
+        return;
       }
 
-      const res = await api.get("/books", { params });
-      setBooks(res.data);
-    } catch (err) {
-      console.log("Lỗi load sách:", err);
-    } finally {
-      setLoadingBooks(false);
-    }
-  };
+      try {
+        const res = await api.get("/books", {
+          params: { search: text }
+        });
 
-  const loadSuggestions = async (text: string) => {
-    if (text.trim() === "") {
-      setSuggestions([]);
-      setShowSuggest(false);
-      return;
-    }
+        // Chỉ lấy 5 gợi ý
+        setSuggestions(res.data.slice(0, 5));
+        setShowSuggest(true);
+      } catch (err) {
+        console.log("Lỗi gợi ý:", err);
+      }
+    };
 
-    try {
-      const res = await api.get("/books", {
-        params: { search: text },
-      });
 
-      setSuggestions(res.data.slice(0, 5));
-      setShowSuggest(true);
-    } catch (err) {
-      console.log("Lỗi gợi ý:", err);
-    }
-  };
 
   const loadCategories = async () => {
     try {
@@ -93,33 +95,65 @@ export default function HomeScreen({ navigation }: any) {
     }
   };
 
-  useEffect(() => {
-    loadBooks();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, categoryFilter]);
+    useEffect(() => {
+      loadBooks();
+    }, [search, categoryFilter]);
 
-  useEffect(() => {
-    loadCategories();
-  }, []);
+    useEffect(() => {
+      loadCategories();
+    }, []);
+
+
+    const loadBestSellers = async () => {
+      try {
+        const res = await api.get("/books/best-sellers");
+        setBestSellers(res.data);
+      } catch (err) {
+        console.log("Lỗi load best sellers:", err);
+      } finally {
+        setLoadingBest(false);
+      }
+    };
+
+    useEffect(() => {
+      loadBestSellers();
+    }, []);
+
+
+    const loadTopDiscounts = async () => {
+      try {
+        const res = await api.get("/books/top-discount?limit=20");
+        setTopDiscounts(res.data);
+      } catch (err) {
+        console.log("Lỗi load top discounts:", err);
+      } finally {
+        setLoadingDiscount(false);
+      }
+    };
+
+    useEffect(() => {
+      loadTopDiscounts();
+    }, []);
+
+
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: COLORS.bg }}>
+    <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F5F5" }}>
       <ScrollView showsVerticalScrollIndicator={false}>
         {/* HEADER */}
         <View
           style={{
-            backgroundColor: COLORS.primary,
+            backgroundColor: "#6C63FF",
             paddingVertical: 25,
             paddingHorizontal: 20,
-            borderBottomLeftRadius: 22,
-            borderBottomRightRadius: 22,
+            borderBottomLeftRadius: 20,
+            borderBottomRightRadius: 20,
           }}
         >
           <Text style={{ color: "#fff", fontSize: 26, fontWeight: "bold" }}>
             UTE Book Store
           </Text>
-
-          <Text style={{ color: "#FFEAF2", marginBottom: 12 }}>
+          <Text style={{ color: "#eee", marginBottom: 12 }}>
             Tri thức mới – Tương lai mới
           </Text>
 
@@ -128,80 +162,74 @@ export default function HomeScreen({ navigation }: any) {
             style={{
               flexDirection: "row",
               backgroundColor: "#fff",
-              borderRadius: 14,
-              alignItems: "center",
-              paddingHorizontal: 14,
-              paddingVertical: 12,
-            }}
-          >
-            <Ionicons name="search" size={20} color={COLORS.primaryDark} />
-
-            <TextInput
-              placeholder="Tìm kiếm sách..."
-              style={{ marginLeft: 10, flex: 1, color: COLORS.text }}
-              placeholderTextColor="#B88A9B"
-              value={search}
-              onChangeText={(text) => {
-                setSearch(text);
-                loadSuggestions(text);
-              }}
-              onSubmitEditing={() => {
-                navigation.navigate("SearchResult", { keyword: search });
-                setShowSuggest(false);
-              }}
-            />
-          </View>
-        </View>
-
-        {/* SUGGESTIONS */}
-        {showSuggest && suggestions.length > 0 && (
-          <View
-            style={{
-              backgroundColor: "#fff",
-              marginHorizontal: 16,
-              marginTop: 8,
               borderRadius: 12,
-              paddingVertical: 6,
-              elevation: 5,
-              borderWidth: 1,
-              borderColor: COLORS.border,
+              alignItems: "center",
+              paddingHorizontal: 12,
+              paddingVertical: 10,
             }}
           >
-            {suggestions.map((item) => (
-              <TouchableOpacity
-                key={item.id}
-                onPress={() => {
-                  navigation.navigate("SearchResult", { query: item.title });
-                  setShowSuggest(false);
-                }}
+            <Ionicons name="search" size={20} color="#666" />
+                <TextInput
+                  placeholder="Tìm kiếm sách..."
+                  style={{ marginLeft: 10, flex: 1 }}
+                  placeholderTextColor="#999"
+                  value={search}
+                  onChangeText={(text) => {
+                    setSearch(text);
+                    loadSuggestions(text);
+                  }}
+                  onSubmitEditing={() => {
+                    navigation.navigate("SearchResult", { keyword: search });
+                    setShowSuggest(false);
+                  }}
+                />
+
+
+          </View>
+            </View>
+            {showSuggest && suggestions.length > 0 && (
+              <View
                 style={{
-                  paddingVertical: 10,
-                  paddingHorizontal: 12,
-                  borderBottomWidth: 0.5,
-                  borderColor: "#F2E3EA",
+                  backgroundColor: "#fff",
+                  marginTop: 5,
+                  borderRadius: 10,
+                  padding: 10,
+                  elevation: 5,
                 }}
               >
-                <Text style={{ fontSize: 14, color: "#444" }}>
-                  {item.title}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-        )}
+                {suggestions.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                        onPress={() => {
+                          navigation.navigate("SearchResult", { query: item.title });
+                          setShowSuggest(false);
+                        }}
+
+                    style={{
+                      paddingVertical: 8,
+                      borderBottomWidth: 0.5,
+                      borderColor: "#eee",
+                    }}
+                  >
+                    <Text style={{ fontSize: 14 }}>{item.title}</Text>
+                  </TouchableOpacity>
+                ))}
+              </View>
+            )}
+
 
         {/* BANNER */}
         <View
           style={{
             margin: 20,
             padding: 20,
-            backgroundColor: COLORS.primaryDark,
-            borderRadius: 20,
+            backgroundColor: "#D62478",
+            borderRadius: 18,
           }}
         >
           <Text style={{ color: "#fff", fontSize: 16, fontWeight: "bold" }}>
             FLASH SALE
           </Text>
-
           <Text
             style={{
               color: "#fff",
@@ -212,21 +240,20 @@ export default function HomeScreen({ navigation }: any) {
           >
             Giảm đến 50%
           </Text>
-
-          <Text style={{ color: "#FFEAF2", marginBottom: 10 }}>
+          <Text style={{ color: "#fff", marginBottom: 10 }}>
             Áp dụng cho sinh viên UTE
           </Text>
 
           <TouchableOpacity
             style={{
               backgroundColor: "#fff",
-              paddingVertical: 9,
-              paddingHorizontal: 18,
+              paddingVertical: 8,
+              paddingHorizontal: 16,
               alignSelf: "flex-start",
-              borderRadius: 10,
+              borderRadius: 8,
             }}
           >
-            <Text style={{ color: COLORS.primaryDark, fontWeight: "bold" }}>
+            <Text style={{ color: "#D62478", fontWeight: "bold" }}>
               Xem ngay
             </Text>
           </TouchableOpacity>
@@ -239,7 +266,6 @@ export default function HomeScreen({ navigation }: any) {
             fontWeight: "bold",
             marginLeft: 20,
             marginBottom: 10,
-            color: COLORS.text,
           }}
         >
           Danh mục
@@ -251,12 +277,9 @@ export default function HomeScreen({ navigation }: any) {
           style={{ paddingLeft: 20, marginBottom: 10 }}
         >
           {loadingCategories ? (
-            <Text style={{ color: COLORS.sub }}>Đang tải...</Text>
+            <Text>Đang tải...</Text>
           ) : (
-            categories.map((cat: any) => {
-              const active = categoryFilter === cat.id;
-
-              return (
+            categories.map((cat: any) => (
                 <TouchableOpacity
                   key={cat.id}
                   onPress={() => {
@@ -264,125 +287,204 @@ export default function HomeScreen({ navigation }: any) {
                     else setCategoryFilter(cat.id);
                   }}
                   style={{
-                    backgroundColor: active ? COLORS.primary : "#fff",
-                    width: 84,
-                    height: 84,
+                    backgroundColor: categoryFilter === cat.id ? "#6C63FF" : "#fff",
+                    width: 80,
+                    height: 80,
                     justifyContent: "center",
                     alignItems: "center",
                     marginRight: 15,
-                    borderRadius: 18,
+                    borderRadius: 16,
                     elevation: 3,
-                    borderWidth: active ? 0 : 1,
-                    borderColor: COLORS.border,
                   }}
                 >
                   <Ionicons
                     name="book-outline"
                     size={26}
-                    color={active ? "#fff" : COLORS.primary}
+                    color={categoryFilter === cat.id ? "#fff" : "#6C63FF"}
                   />
-
                   <Text
                     style={{
-                      marginTop: 6,
+                      marginTop: 5,
                       fontSize: 12,
-                      color: active ? "#fff" : "#444",
+                      color: categoryFilter === cat.id ? "#fff" : "#000",
                     }}
-                    numberOfLines={1}
                   >
                     {cat.name}
                   </Text>
                 </TouchableOpacity>
-              );
-            })
+
+            ))
           )}
         </ScrollView>
 
-        {/* SÁCH NỔI BẬT */}
-        <View
+        {/* TOP 10 BÁN CHẠY – chỉ hiển thị khi KHÔNG lọc danh mục */}
+        {!categoryFilter && (
+          <>
+            <View
+              style={{
+                flexDirection: "row",
+                justifyContent: "space-between",
+                paddingHorizontal: 20,
+                marginTop: 20,
+              }}
+            >
+              <Text style={{ fontSize: 20, fontWeight: "bold" }}>
+                Top 10 sách bán chạy nhất
+              </Text>
+            </View>
+
+            {loadingBest ? (
+              <Text style={{ marginLeft: 20 }}>Đang tải...</Text>
+            ) : (
+              <FlatList
+                data={bestSellers}
+                horizontal
+                keyExtractor={(item) => item.id.toString()}
+                showsHorizontalScrollIndicator={false}
+                contentContainerStyle={{ paddingLeft: 20, paddingVertical: 10 }}
+                renderItem={({ item }) => (
+                  <TouchableOpacity
+                    style={{
+                      width: 150,
+                      backgroundColor: "#fff",
+                      borderRadius: 16,
+                      padding: 10,
+                      marginRight: 15,
+                      elevation: 3,
+                    }}
+                    onPress={() => navigation.navigate("BookDetail", { id: item.id })}
+                  >
+                    <Image
+                      source={{ uri: item.cover_image }}
+                      style={{ width: "100%", height: 140, borderRadius: 10 }}
+                    />
+
+                    <Text style={{ fontWeight: "bold", marginTop: 6 }} numberOfLines={1}>
+                      {item.title}
+                    </Text>
+
+                    <Text style={{ color: "#999", fontSize: 12 }}>
+                      {item.author_name}
+                    </Text>
+
+                    <Text
+                      style={{
+                        color: "#6C63FF",
+                        fontSize: 16,
+                        fontWeight: "bold",
+                        marginTop: 4,
+                      }}
+                    >
+                      {Number(item.price).toLocaleString("vi-VN")}đ
+                    </Text>
+
+                    <Text
+                      style={{
+                        textDecorationLine: "line-through",
+                        color: "#999",
+                        fontSize: 12,
+                      }}
+                    >
+                      {Number(item.original_price).toLocaleString("vi-VN")}đ
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              />
+            )}
+          </>
+        )}
+
+        {/* 20 SẢN PHẨM GIẢM GIÁ CAO NHẤT */}
+        <Text
           style={{
-            flexDirection: "row",
-            justifyContent: "space-between",
-            paddingHorizontal: 20,
-            marginTop: 10,
+            fontSize: 20,
+            fontWeight: "bold",
+            marginLeft: 20,
+            marginTop: 20,
+            marginBottom: 10,
           }}
         >
-          <Text style={{ fontSize: 20, fontWeight: "bold", color: COLORS.text }}>
-            Sách nổi bật
-          </Text>
+          Giảm giá nhiều nhất
+        </Text>
 
-          <TouchableOpacity>
-            <Text style={{ color: COLORS.primaryDark, fontWeight: "600" }}>
-              Xem tất cả
-            </Text>
-          </TouchableOpacity>
-        </View>
-
-        {/* LIST SÁCH */}
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={{ paddingLeft: 20, marginTop: 12, paddingBottom: 18 }}
-        >
-          {loadingBooks ? (
-            <Text style={{ color: COLORS.sub }}>Đang tải...</Text>
-          ) : (
-            books.map((item: any) => (
+        {loadingDiscount ? (
+          <Text style={{ marginLeft: 20 }}>Đang tải...</Text>
+        ) : (
+          <FlatList
+            data={topDiscounts}
+            numColumns={2}
+            keyExtractor={(item) => item.id.toString()}
+            columnWrapperStyle={{ justifyContent: "space-between", paddingHorizontal: 20 }}
+            renderItem={({ item }) => (
               <TouchableOpacity
-                key={item.id}
                 style={{
-                  width: 165,
+                  width: "48%",
                   backgroundColor: "#fff",
-                  borderRadius: 18,
+                  borderRadius: 16,
                   padding: 12,
-                  marginRight: 15,
-                  elevation: 4,
-                  borderWidth: 1,
-                  borderColor: COLORS.border,
+                  marginBottom: 15,
+                  elevation: 3,
                 }}
                 onPress={() => navigation.navigate("BookDetail", { id: item.id })}
-                activeOpacity={0.85}
               >
                 <Image
                   source={{ uri: item.cover_image }}
                   style={{
                     width: "100%",
-                    height: 155,
-                    borderRadius: 14,
+                    height: 160,
+                    borderRadius: 12,
                     marginBottom: 10,
-                    backgroundColor: COLORS.soft,
                   }}
                 />
 
-                <Text
-                  style={{
-                    fontWeight: "bold",
-                    fontSize: 14,
-                    color: COLORS.text,
-                  }}
-                  numberOfLines={2}
-                >
+                <Text numberOfLines={2} style={{ fontWeight: "bold", fontSize: 14 }}>
                   {item.title}
                 </Text>
 
-                <Text style={{ color: "#8A6475", fontSize: 12 }} numberOfLines={1}>
-                  Tác giả: {item.author_name || item.author?.name || "Không rõ"}
+                <Text style={{ color: "#999", fontSize: 12 }}>
+                  {item.author_name || "Không rõ"}
                 </Text>
 
                 <Text
                   style={{
-                    fontSize: 16,
-                    color: COLORS.price,
+                    marginTop: 6,
+                    color: "#E53935",
                     fontWeight: "bold",
-                    marginTop: 8,
+                    fontSize: 16,
                   }}
                 >
-                  {formatPrice(item.price)}
+                  {Number(item.price).toLocaleString("vi-VN")}đ
                 </Text>
+
+                <Text
+                  style={{
+                    textDecorationLine: "line-through",
+                    color: "#999",
+                    fontSize: 12,
+                  }}
+                >
+                  {Number(item.original_price).toLocaleString("vi-VN")}đ
+                </Text>
+
+                <View
+                  style={{
+                    backgroundColor: "#E91E63",
+                    paddingVertical: 3,
+                    paddingHorizontal: 8,
+                    borderRadius: 8,
+                    alignSelf: "flex-start",
+                    marginTop: 5,
+                  }}
+                >
+                  <Text style={{ color: "#fff", fontSize: 12, fontWeight: "bold" }}>
+                    -{Math.round(item.discount_percent)}%
+                  </Text>
+                </View>
               </TouchableOpacity>
-            ))
-          )}
-        </ScrollView>
+            )}
+          />
+        )}
+
       </ScrollView>
     </SafeAreaView>
   );

@@ -91,10 +91,7 @@ export default function BookDetail() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#FFF5F8", // hồng rất nhạt
-  },
+  container: { flex: 1, backgroundColor: "#fff" },
 
   center: {
     flex: 1,
@@ -105,7 +102,7 @@ const styles = StyleSheet.create({
   imageContainer: {
     width: "100%",
     height: 380,
-    backgroundColor: "#FFE4EC", // hồng pastel
+    backgroundColor: "#fafafa",
     justifyContent: "center",
     alignItems: "center",
     elevation: 4,
@@ -119,7 +116,7 @@ const styles = StyleSheet.create({
 
   card: {
     marginTop: -20,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#fff",
     padding: 20,
     borderTopLeftRadius: 25,
     borderTopRightRadius: 25,
@@ -129,26 +126,26 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 26,
     fontWeight: "bold",
-    color: "#B83280", // hồng đậm sang
+    color: "#222",
     marginBottom: 6,
   },
 
   author: {
     fontSize: 16,
-    color: "#7A3E6D", // tím hồng nhẹ
+    color: "#444",
     marginBottom: 4,
   },
 
   sub: {
     fontSize: 15,
-    color: "#9E5F84",
+    color: "#666",
   },
 
   price: {
     marginTop: 12,
     fontSize: 28,
     fontWeight: "bold",
-    color: "#FF5C8A", // hồng nổi
+    color: "#D62478",
   },
 
   section: {
@@ -156,28 +153,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     marginBottom: 8,
-    color: "#B83280",
   },
 
   description: {
     fontSize: 15,
     lineHeight: 22,
     textAlign: "justify",
-    color: "#6B4A5A",
+    color: "#555",
   },
 
   btnAdd: {
     marginTop: 28,
-    backgroundColor: "#FF7EB6", // hồng kẹo
+    backgroundColor: "#6C63FF",
     paddingVertical: 16,
     borderRadius: 12,
     alignItems: "center",
   },
 
   btnText: {
-    color: "#FFFFFF",
+    color: "#fff",
     fontSize: 18,
     fontWeight: "600",
   },
 });
-
