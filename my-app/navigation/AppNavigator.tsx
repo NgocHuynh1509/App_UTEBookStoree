@@ -14,6 +14,10 @@ import TabNavigator from "./TabNavigator";
 import EditInfoScreen from "../screens/profile/EditInfoScreen";
 import ChangePasswordScreen from "../screens/profile/ChangePasswordScreen";
 import CartScreen from "../screens/profile/CartScreen";
+import AddressScreen from "../screens/profile/AddressList";
+import AddressFormScreen from "../screens/profile/AddressForm";
+
+
 
 import ChangeEmailScreen from "../screens/profile/ChangeEmailScreen";
 
@@ -40,8 +44,9 @@ export default function AppNavigator() {
       <Stack.Screen name="EditInfo" component={EditInfoScreen} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="Cart" component={CartScreen} />
+      <Stack.Screen name="Address" component={AddressScreen} />
+      <Stack.Screen name="AddressForm" component={AddressFormScreen} />
       <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} />
-
       <Stack.Screen name="BookDetail" component={BookDetailScreen} />
       <Stack.Screen name="SearchResult" component={SearchResultScreen} />
 
