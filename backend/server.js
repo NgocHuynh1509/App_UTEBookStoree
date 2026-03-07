@@ -7,7 +7,7 @@ const categoryRoutes = require("./routes/categoryRoutes");
 const upload = require("./middleware/upload");
 const cartRoutes = require('./routes/cartRoutes');
 const addressRoutes = require('./routes/addressRoutes');
-
+const orderRoutes = require('./routes/orderRoutes');
 const app = express();
 
 app.use(cors());
@@ -19,6 +19,7 @@ app.use("/api/books", bookRoutes);
 app.use("/api/categories", categoryRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use('/api/addresses', addressRoutes);
+app.use('/api/orders', orderRoutes);
 app.post("/upload-avatar", upload.single("avatar"), (req, res) => {
   res.json({ filename: req.file.filename });
 });

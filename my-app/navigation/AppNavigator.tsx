@@ -16,6 +16,7 @@ import ChangePasswordScreen from "../screens/profile/ChangePasswordScreen";
 import CartScreen from "../screens/profile/CartScreen";
 import AddressScreen from "../screens/profile/AddressList";
 import AddressFormScreen from "../screens/profile/AddressForm";
+import CheckoutScreen from "../screens/profile/CheckoutScreen";
 
 
 
@@ -46,6 +47,8 @@ export default function AppNavigator() {
       <Stack.Screen name="Cart" component={CartScreen} />
       <Stack.Screen name="Address" component={AddressScreen} />
       <Stack.Screen name="AddressForm" component={AddressFormScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
+
       <Stack.Screen name="ChangeEmail" component={ChangeEmailScreen} />
       <Stack.Screen name="BookDetail" component={BookDetailScreen} />
       <Stack.Screen name="SearchResult" component={SearchResultScreen} />

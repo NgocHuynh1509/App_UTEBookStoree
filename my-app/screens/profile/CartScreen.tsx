@@ -1,164 +1,222 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useState, useCallback } from "react";
 import {
-  View,
-  Text,
-  TouchableOpacity,
-  StyleSheet,
-  ScrollView,
-  RefreshControl,
-  ActivityIndicator,
-  Alert,
-  SafeAreaView
-} from 'react-native';
+  View, Text, Image, TouchableOpacity, StyleSheet,
+  ScrollView, RefreshControl, ActivityIndicator, Alert
+} from "react-native";
+import { Swipeable, GestureHandlerRootView } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios";
 import Constants from "expo-constants";
+import { useFocusEffect, useNavigation } from "@react-navigation/native";
+import axios from "axios";
 import { useAuth } from "../../hooks/useAuth";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BASE_URL = Constants.expoConfig.extra.BASE_URL;
 
-export default function AddressScreen() {
+export default function CartScreen() {
   const { user } = useAuth();
   const navigation = useNavigation<any>();
-  const [addresses, setAddresses] = useState<any[]>([]);
+  const [cartItems, setCartItems] = useState<any[]>([]);
+  const [selectedItems, setSelectedItems] = useState<number[]>([]); // Lưu ID các item được chọn
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
-  // 1. Chức năng Lấy danh sách địa chỉ
-  const fetchAddresses = async () => {
+  const fetchCart = async () => {
     if (!user?.id) return;
     try {
       const token = await AsyncStorage.getItem('token');
-      const response = await axios.get(`${BASE_URL}/api/addresses/${user.id}`, {
+      if (!token) return;
+
+      const response = await axios.get(`${BASE_URL}/api/cart/${user.id}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setAddresses(response.data);
+      setCartItems(response.data);
     } catch (error) {
-      console.log("❌ Lỗi lấy địa chỉ:", error);
+      console.log("❌ Lỗi tải giỏ hàng:", error);
     } finally {
       setLoading(false);
       setRefreshing(false);
     }
   };
 
-  // Tự động load lại khi quay lại màn hình này
-  useFocusEffect(useCallback(() => { fetchAddresses(); }, [user?.id]));
+  useFocusEffect(useCallback(() => { fetchCart(); }, [user?.id]));
 
-  // 2. Chức năng Xóa địa chỉ
-  const handleDelete = async (id: number, isDefault: number) => {
-    if (isDefault === 1) {
-      return Alert.alert("Thông báo", "Không thể xóa địa chỉ mặc định!");
+  // Logic chọn/bỏ chọn sản phẩm
+  const toggleSelect = (id: number) => {
+    setSelectedItems(prev =>
+      prev.includes(id) ? prev.filter(itemId => itemId !== id) : [...prev, id]
+    );
+  };
+
+  // Logic chọn tất cả
+  const toggleSelectAll = () => {
+    if (selectedItems.length === cartItems.length) {
+      setSelectedItems([]);
+    } else {
+      setSelectedItems(cartItems.map(item => item.id));
     }
+  };
 
-    Alert.alert("Xác nhận", "Bạn muốn xóa địa chỉ này?", [
-      { text: "Hủy", style: "cancel" },
-      {
-        text: "Xóa",
-        style: "destructive",
-        onPress: async () => {
+  const updateQuantity = async (cartItemId: number, currentQty: number, delta: number) => {
+    const newQty = currentQty + delta;
+    if (newQty < 1) return;
+
+    try {
+      const token = await AsyncStorage.getItem('token');
+      await axios.put(`${BASE_URL}/api/cart/update-quantity`,
+        { cartItemId, quantity: newQty },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      setCartItems(prev => prev.map(item =>
+        item.id === cartItemId ? { ...item, quantity: newQty } : item
+      ));
+    } catch (error) {
+      Alert.alert("Lỗi", "Không thể cập nhật số lượng");
+    }
+  };
+
+  const removeItem = async (cartItemId: number) => {
+    Alert.alert("Xác nhận", "Xóa sản phẩm này?", [
+      { text: "Hủy" },
+      { text: "Xóa", style: "destructive", onPress: async () => {
           try {
             const token = await AsyncStorage.getItem('token');
-            await axios.delete(`${BASE_URL}/api/addresses/${id}`, {
+            await axios.delete(`${BASE_URL}/api/cart/remove/${cartItemId}`, {
               headers: { Authorization: `Bearer ${token}` }
             });
-            setAddresses(prev => prev.filter(item => item.id !== id));
-          } catch (error) {
-            Alert.alert("Lỗi", "Không thể xóa địa chỉ");
-          }
-        }
-      }
+            setCartItems(prev => prev.filter(item => item.id !== cartItemId));
+            setSelectedItems(prev => prev.filter(id => id !== cartItemId));
+          } catch (error) { Alert.alert("Lỗi", "Không thể xóa"); }
+      }}
     ]);
   };
 
-  if (loading) {
-    return (
-      <View style={styles.center}>
-        <ActivityIndicator size="large" color="#6C63FF" />
-      </View>
-    );
-  }
+  // Tính tổng tiền dựa trên các sản phẩm đã CHỌN
+  const calculateTotal = () => {
+    return cartItems
+      .filter(item => selectedItems.includes(item.id))
+      .reduce((sum, item) => sum + (item.price * item.quantity), 0);
+  };
+
+  // Chuyển sang màn hình Checkout
+  const handleGoToCheckout = () => {
+    if (selectedItems.length === 0) {
+      Alert.alert("Thông báo", "Vui lòng chọn ít nhất một sản phẩm để thanh toán");
+      return;
+    }
+
+    // 1. Lấy danh sách các đối tượng item đầy đủ từ mảng ID đã chọn
+    const selectedFullItems = cartItems.filter(item => selectedItems.includes(item.id));
+
+    // 2. Chuyển đổi (map) lại cấu trúc dữ liệu để khớp với Controller Backend yêu cầu
+    const itemsToPay = selectedFullItems.map(item => ({
+      cart_item_id: item.id,      // Gán 'id' của giỏ hàng vào 'cart_item_id' để Backend xóa được giỏ
+      book_id: item.book_id,    // ID của sách để Backend trừ kho
+      title: item.title,
+      price: item.price,
+      quantity: item.quantity,
+      cover_image: item.cover_image
+    }));
+
+    // 3. Log thử để kiểm tra cấu trúc trước khi đi (Bạn có thể xóa dòng này sau khi chạy tốt)
+    console.log("Dữ liệu chuẩn bị gửi sang Checkout:", itemsToPay);
+
+    navigation.navigate("Checkout", {
+      selectedItems: itemsToPay,
+      totalPrice: calculateTotal()
+    });
+  };
+
+  const renderRightActions = (id: number) => (
+    <TouchableOpacity style={styles.deleteAction} onPress={() => removeItem(id)}>
+      <Ionicons name="trash-outline" size={28} color="#fff" />
+      <Text style={styles.deleteActionText}>Xóa</Text>
+    </TouchableOpacity>
+  );
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header giống CartScreen */}
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Ionicons name="arrow-back-outline" size={26} color="#fff" />
-        </TouchableOpacity>
-        <Text style={styles.headerText}>Địa chỉ nhận hàng</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('AddressUpdate', { id: null })}>
-          <Ionicons name="add-circle-outline" size={28} color="#fff" />
-        </TouchableOpacity>
-      </View>
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.headerText}>Giỏ hàng ({cartItems.length})</Text>
+          <TouchableOpacity onPress={() => toggleSelectAll()}>
+             <Text style={{color: '#fff', fontWeight: 'bold'}}>
+               {selectedItems.length === cartItems.length ? "Bỏ chọn tất cả" : "Chọn tất cả"}
+             </Text>
+          </TouchableOpacity>
+        </View>
 
-      <ScrollView
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchAddresses} />}
-        contentContainerStyle={{ paddingBottom: 20 }}
-      >
-        <View style={{ height: 20 }} />
-
-        {addresses.length === 0 ? (
-          <View style={styles.emptyContainer}>
-            <Ionicons name="location-outline" size={80} color="#DDD" />
-            <Text style={{ color: "#AAA", marginTop: 10 }}>Chưa có địa chỉ nào</Text>
-          </View>
-        ) : (
-          addresses.map((item) => (
-            <View key={item.id} style={styles.addressCard}>
-              <View style={styles.infoContainer}>
-                <View style={styles.nameRow}>
-                  <Text style={styles.nameText}>{item.recipient_name}</Text>
-                  {item.is_default === 1 && (
-                    <View style={styles.defaultBadge}>
-                      <Text style={styles.defaultText}>Mặc định</Text>
-                    </View>
-                  )}
-                </View>
-
-                <Text style={styles.phoneText}>{item.phone_number}</Text>
-                <Text style={styles.detailText}>
-                  {item.specific_address}{"\n"}
-                  {item.ward}, {item.district}, {item.province}
-                </Text>
-              </View>
-
-              <View style={styles.actionContainer}>
-                <TouchableOpacity
-                  onPress={() => navigation.navigate('AddressUpdate', { id: item.id })}
-                  style={styles.editBtn}
-                >
-                  <Text style={styles.editText}>Sửa</Text>
-                </TouchableOpacity>
-
-                {item.is_default !== 1 && (
-                  <TouchableOpacity onPress={() => handleDelete(item.id, item.is_default)}>
-                    <Ionicons name="trash-outline" size={22} color="#FF5252" />
-                  </TouchableOpacity>
-                )}
-              </View>
-            </View>
-          ))
-        )}
-      </ScrollView>
-
-      {/* Nút thêm mới dưới cùng (Sticky Button) */}
-      <View style={styles.footer}>
-        <TouchableOpacity
-          style={styles.addBtnLarge}
-          onPress={() => navigation.navigate('AddressUpdate', { id: null })}
+        <ScrollView
+          refreshControl={<RefreshControl refreshing={refreshing} onRefresh={fetchCart} />}
+          contentContainerStyle={{ paddingBottom: 120 }}
         >
-          <Text style={styles.addBtnText}>THÊM ĐỊA CHỈ MỚI</Text>
-        </TouchableOpacity>
+          {cartItems.length === 0 ? (
+            <View style={styles.emptyCart}>
+              <Ionicons name="cart-outline" size={80} color="#DDD" />
+              <Text style={{ color: "#AAA", marginTop: 10 }}>Giỏ hàng rỗng</Text>
+            </View>
+          ) : (
+            cartItems.map((item) => (
+              <Swipeable key={item.id} renderRightActions={() => renderRightActions(item.id)}>
+                <View style={[styles.cartCard, item.stock <= 0 && styles.disabledCard]}>
+                  {/* CHECKBOX */}
+                  <TouchableOpacity onPress={() => toggleSelect(item.id)} style={styles.checkbox}>
+                    <Ionicons
+                      name={selectedItems.includes(item.id) ? "checkbox" : "square-outline"}
+                      size={24}
+                      color={selectedItems.includes(item.id) ? "#6C63FF" : "#DDD"}
+                    />
+                  </TouchableOpacity>
+
+                  <Image
+                    source={{ uri: item.cover_image?.startsWith('http') ? item.cover_image : `${BASE_URL}/uploads/${item.cover_image}` }}
+                    style={styles.bookImage}
+                  />
+
+                  <View style={styles.infoContainer}>
+                    <Text style={styles.title} numberOfLines={1}>{item.title}</Text>
+                    <Text style={styles.price}>{Number(item.price).toLocaleString()}đ</Text>
+
+                    <View style={styles.quantityRow}>
+                      <TouchableOpacity style={styles.qtyBtn} onPress={() => updateQuantity(item.id, item.quantity, -1)}>
+                        <Text style={styles.qtyBtnText}>-</Text>
+                      </TouchableOpacity>
+                      <Text style={styles.qtyText}>{item.quantity}</Text>
+                      <TouchableOpacity
+                        style={styles.qtyBtn}
+                        onPress={() => updateQuantity(item.id, item.quantity, 1)}
+                        disabled={item.quantity >= item.stock}
+                      >
+                        <Text style={[styles.qtyBtnText, item.quantity >= item.stock && { color: '#CCC' }]}>+</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              </Swipeable>
+            ))
+          )}
+        </ScrollView>
+
+        <View style={styles.footer}>
+          <View>
+            <Text style={styles.totalLabel}>Tổng cộng ({selectedItems.length}):</Text>
+            <Text style={styles.totalPrice}>{calculateTotal().toLocaleString()}đ</Text>
+          </View>
+          <TouchableOpacity
+            style={[styles.checkoutBtn, selectedItems.length === 0 && {backgroundColor: '#CCC'}]}
+            onPress={handleGoToCheckout}
+          >
+            <Text style={styles.checkoutText}>Thanh toán</Text>
+          </TouchableOpacity>
+        </View>
       </View>
-    </SafeAreaView>
+    </GestureHandlerRootView>
   );
 }
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F5F5F5" },
-  center: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: {
     backgroundColor: "#6C63FF",
     paddingVertical: 20,
@@ -170,48 +228,49 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: 20,
   },
   headerText: { fontSize: 20, fontWeight: "bold", color: "#fff" },
-  addressCard: {
+  cartCard: {
     backgroundColor: "#fff",
     marginHorizontal: 20,
-    marginBottom: 15,
-    padding: 15,
+    marginBottom: 10,
+    padding: 12,
     borderRadius: 14,
     flexDirection: "row",
-    justifyContent: "space-between",
-    elevation: 3,
-    shadowColor: "#000",
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-  },
-  infoContainer: { flex: 1 },
-  nameRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 5 },
-  nameText: { fontSize: 16, fontWeight: 'bold', color: '#333', marginRight: 10 },
-  defaultBadge: {
-    borderWidth: 1,
-    borderColor: '#6C63FF',
-    paddingHorizontal: 6,
-    paddingVertical: 1,
-    borderRadius: 4
-  },
-  defaultText: { color: '#6C63FF', fontSize: 10, fontWeight: 'bold' },
-  phoneText: { color: '#666', marginBottom: 5 },
-  detailText: { color: '#888', fontSize: 13, lineHeight: 18 },
-  actionContainer: { alignItems: 'flex-end', justifyContent: 'space-between', marginLeft: 10 },
-  editBtn: { marginBottom: 10 },
-  editText: { color: '#6C63FF', fontWeight: 'bold' },
-  emptyContainer: { alignItems: "center", marginTop: 100 },
-  footer: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    elevation: 10,
-  },
-  addBtnLarge: {
-    backgroundColor: "#6C63FF",
-    paddingVertical: 15,
-    borderRadius: 12,
     alignItems: "center",
   },
-  addBtnText: { color: "#fff", fontWeight: "bold", fontSize: 16 },
+  checkbox: { marginRight: 10 },
+  bookImage: { width: 60, height: 80, borderRadius: 8 },
+  infoContainer: { flex: 1, marginLeft: 12 },
+  title: { fontSize: 15, fontWeight: "bold", color: "#333" },
+  price: { color: "#6C63FF", fontWeight: "bold", marginTop: 4 },
+  quantityRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginTop: 10,
+    backgroundColor: "#F9F9F9",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#EEE",
+    alignSelf: 'flex-start'
+  },
+  qtyBtn: { paddingHorizontal: 10, paddingVertical: 2 },
+  qtyBtnText: { fontSize: 18, color: "#6C63FF", fontWeight: 'bold' },
+  qtyText: { marginHorizontal: 10, fontWeight: "bold" },
+  footer: {
+    position: "absolute",
+    bottom: 0,
+    width: "100%",
+    backgroundColor: "#fff",
+    padding: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    elevation: 20,
+  },
+  totalPrice: { fontSize: 20, fontWeight: "bold", color: "#E53935" },
+  checkoutBtn: { backgroundColor: "#6C63FF", paddingVertical: 12, paddingHorizontal: 30, borderRadius: 12 },
+  checkoutText: { color: "#fff", fontWeight: "bold" },
+  deleteAction: { backgroundColor: '#FF5252', justifyContent: 'center', alignItems: 'center', width: 80, height: 100, borderRadius: 14 },
+  deleteActionText: { color: '#fff', fontSize: 12, marginTop: 4 },
+  emptyCart: { alignItems: "center", marginTop: 100 },
+  disabledCard: { opacity: 0.5 }
 });

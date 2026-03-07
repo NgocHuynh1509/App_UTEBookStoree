@@ -80,3 +80,39 @@ exports.deleteAddress = (req, res) => {
     res.json({ message: "Xóa thành công" });
   });
 };
+
+exports.getDefaultAddress = (req, res) => {
+    const userId = req.params.userId;
+
+    const query = 'SELECT * FROM shipping_addresses WHERE user_id = ? AND is_default = 1 LIMIT 1';
+
+    // Dùng db.query hoặc db.execute trực tiếp với callback
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error("Lỗi SQL:", err);
+            return res.status(500).json({ message: "Lỗi hệ thống" });
+        }
+
+        // Với callback, results chính là mảng chứa dữ liệu (rows)
+        if (results && results.length > 0) {
+            res.json(results[0]);
+        } else {
+            res.json(null);
+        }
+    });
+};
+
+exports.getAllAddressesByUser = (req, res) => {
+    const userId = req.params.userId;
+    const query = 'SELECT * FROM shipping_addresses WHERE user_id = ? ORDER BY is_default DESC, id DESC';
+
+    db.query(query, [userId], (err, results) => {
+        if (err) {
+            console.error("Lỗi SQL dòng 118:", err);
+            return res.status(500).json({ message: "Lỗi tải danh sách địa chỉ" });
+        }
+
+        // results ở đây đã là một mảng (Array), không cần destructuring [rows]
+        res.json(results);
+    });
+};
