@@ -19,6 +19,7 @@ export const useAuth = () => {
           headers: { Authorization: `Bearer ${token}` },
         });
 
+
         const profile = await res.json();
 
         setUser(profile);

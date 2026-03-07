@@ -1,10 +1,11 @@
 const express = require('express');
 const cors = require('cors');
-const authRoutes = require('./routes/auth');
-const userRoutes = require('./routes/userRoutes');
+const authRoutes = require('./routes/authRoutes');
+const userRoutes = require('./routes/profileRoutes');
 const bookRoutes = require('./routes/bookRoutes.js')
 const categoryRoutes = require("./routes/categoryRoutes");
 const upload = require("./middleware/upload");
+const cartRoutes = require('./routes/cartRoutes');
 
 const app = express();
 
@@ -25,6 +26,7 @@ app.get("/", (req, res) => {
     status: "OK",
   });
 });
+app.use('/api/cart', cartRoutes);
 
 app.listen(3000, () => {
   console.log('Server running at http://localhost:3000');
