@@ -1,4 +1,5 @@
 const db = require('../config/db');
+
 // Lấy tất cả danh mục
 exports.getAllCategories = (req, res) => {
   const sql = "SELECT * FROM categories";
