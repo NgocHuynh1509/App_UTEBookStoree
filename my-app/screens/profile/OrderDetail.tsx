@@ -70,7 +70,7 @@ export default function OrderDetail() {
     if (orderData.status === 'cancelled') {
       return (
         <View style={styles.cancelledBox}>
-          <Text style={styles.cancelledText}>🚫 Đơn hàng này đã bị huỷ</Text>
+          <Text style={styles.cancelledText}>Đơn hàng này đã bị huỷ</Text>
         </View>
       );
     }

@@ -1,11 +1,18 @@
 const db = require('../config/db');
 
-// Lấy danh sách sách có tìm kiếm và lọc
+// 1. Lấy danh sách sách có tìm kiếm, lọc và phân trang (Dùng cho Lazy Loading)
 exports.getAllBooks = (req, res) => {
-  const { search, category } = req.query;
+  // Đảm bảo ép kiểu số để tránh lỗi tính toán
+  const page = parseInt(req.query.page) || 1;
+  const limit = parseInt(req.query.limit) || 20;
+  const search = req.query.search;
+  const category = req.query.category;
 
+  const offset = (page - 1) * limit;
+
+  // Query chính để lấy dữ liệu
   let sql = `
-    SELECT b.id, b.title, b.description, b.price, b.stock, b.cover_image,
+    SELECT b.id, b.title, b.description, b.price, b.original_price, b.stock, b.cover_image,
            c.name AS category_name, a.name AS author_name, p.name AS publisher_name
     FROM books b
     LEFT JOIN categories c ON b.category_id = c.id
@@ -14,21 +21,52 @@ exports.getAllBooks = (req, res) => {
     WHERE 1=1
   `;
 
+  // Query phụ để đếm tổng số dòng (quan trọng để Frontend biết có "hasMore" hay không)
+  let countSql = `SELECT COUNT(*) as total FROM books b WHERE 1=1`;
+
   const params = [];
+  const countParams = [];
+
   if (search) {
-    sql += ` AND b.title LIKE ?`;
+    const searchFilter = " AND b.title LIKE ?";
+    sql += searchFilter;
+    countSql += searchFilter;
     params.push(`%${search}%`);
+    countParams.push(`%${search}%`);
   }
+
   if (category) {
-    sql += ` AND b.category_id = ?`;
+    const catFilter = " AND b.category_id = ?";
+    sql += catFilter;
+    countSql += catFilter;
     params.push(category);
+    countParams.push(category);
   }
 
-  sql += " ORDER BY b.id DESC";
+  sql += " ORDER BY b.id DESC LIMIT ? OFFSET ?";
+  params.push(limit, offset);
 
-  db.query(sql, params, (err, results) => {
-    if (err) return res.status(500).json({ message: "Lỗi server", error: err });
-    res.json(results);
+  // Chạy đồng thời cả 2 query để tối ưu hiệu năng
+  db.query(countSql, countParams, (err, countResult) => {
+    if (err) return res.status(500).json({ message: "Lỗi đếm dữ liệu", error: err });
+
+    const totalItems = countResult[0].total;
+    const totalPages = Math.ceil(totalItems / limit);
+
+    db.query(sql, params, (err, results) => {
+      if (err) return res.status(500).json({ message: "Lỗi server", error: err });
+
+      // Trả về cả data và thông tin phân trang
+      res.json({
+        data: results,
+        pagination: {
+          totalItems,
+          totalPages,
+          currentPage: page,
+          hasNextPage: page < totalPages
+        }
+      });
+    });
   });
 };
 
