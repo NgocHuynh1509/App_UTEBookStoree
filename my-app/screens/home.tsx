@@ -4,7 +4,7 @@ import {
   Image,
   TouchableOpacity,
   ScrollView,
-  ActivityIndicator // <--- Thêm nó ở đây
+  ActivityIndicator, // <--- Thêm dòng này vào đây
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
@@ -111,46 +111,39 @@ export default function HomeScreen({ navigation }: any) {
     loadTopDiscounts();
   }, []);
 
-  const loadAllBooks = async () => {
-    // Nếu đang load hoặc không còn dữ liệu thì dừng
-    if (loadingMore || !hasMore) return;
+  // 1. Cập nhật loadAllBooks để xử lý loading tốt hơn
+    const loadAllBooks = async () => {
+      if (!hasMore || loadingMore) return;
 
-    setLoadingMore(true);
-
-    // Thêm một khoảng trễ (ví dụ 1500ms = 1.5 giây) để kéo dài thời gian hiện vòng xoay
-    setTimeout(async () => {
+      setLoadingMore(true);
       try {
         const res = await api.get("/books", {
-          params: {
-            page: page,
-            limit: 10
-          },
+          params: { page, limit: 10 },
         });
 
-        const newBooks = res.data.data;
-        const pagination = res.data.pagination;
-
-        if (!newBooks || newBooks.length === 0) {
-          setHasMore(false);
-        } else {
-          setAllBooks((prev) => {
-            const filteredNewBooks = newBooks.filter(
-              (newItem) => !prev.some((oldItem) => oldItem.id === newItem.id)
-            );
-            return [...prev, ...filteredNewBooks];
-          });
-
-          setHasMore(pagination.hasNextPage);
-          setPage((prev) => prev + 1);
-        }
+        // --- ĐOẠN LÀM CHẬM Ở ĐÂY ---
+            // Bao bọc phần set dữ liệu vào setTimeout
+            setTimeout(() => {
+              if (res.data.length === 0) {
+                setHasMore(false);
+              } else {
+                setAllBooks((prev) => {
+                  const newList = res.data.filter(
+                    (item) => !prev.some((b) => b.id === item.id)
+                  );
+                  return [...prev, ...newList];
+                });
+                setPage((prev) => prev + 1);
+              }
+              setLoadingMore(false); // Tắt loading sau khi đã đợi xong
+            }, 1500); // 1500ms = 1.5 giây (Ông muốn chậm hơn thì tăng số này lên)
+            // ----------------------------
       } catch (err) {
-        console.error("Lỗi tải tất cả sách:", err);
+        console.log("Lỗi tải tất cả sách:", err);
       } finally {
-        // Tắt trạng thái loading sau khi dữ liệu đã về (hoặc lỗi)
         setLoadingMore(false);
       }
-    }, 1500); // Bạn có thể chỉnh con số này (1500, 2000,...) để tăng/giảm thời gian chờ
-  };
+    };
 
   useEffect(() => {
     loadAllBooks();
@@ -158,7 +151,14 @@ export default function HomeScreen({ navigation }: any) {
 
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: "#F5F5F5" }}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView showsVerticalScrollIndicator={false}
+                    onScroll={({ nativeEvent }) => {
+                      const isCloseToBottom = nativeEvent.layoutMeasurement.height + nativeEvent.contentOffset.y >= nativeEvent.contentSize.height - 20;
+                      if (isCloseToBottom) {
+                        loadAllBooks(); // Tự gọi hàm tải thêm khi lướt gần tới đáy
+                      }
+                    }}
+                    scrollEventThrottle={400} >
 
         {/* HEADER */}
         <View
@@ -563,6 +563,7 @@ export default function HomeScreen({ navigation }: any) {
             fontWeight: "bold",
             marginLeft: 20,
             marginTop: 20,
+            marginBottom: 10
           }}
         >
           Tất cả sách
@@ -571,27 +572,12 @@ export default function HomeScreen({ navigation }: any) {
         <FlatList
           data={allBooks}
           numColumns={2}
-          keyExtractor={(item) => item.id.toString()}
-
-          // 1. Cho phép cuộn (BẮT BUỘC)
-          scrollEnabled={true}
-
+          scrollEnabled={false} // Vẫn giữ false vì đang nằm trong ScrollView
+          keyExtractor={(item, index) => item.id.toString() + index}
           columnWrapperStyle={{
             justifyContent: "space-between",
             paddingHorizontal: 20,
           }}
-
-          // 2. Tự động gọi hàm khi cuộn gần đến đáy (cách đáy 20%)
-          onEndReached={loadAllBooks}
-          onEndReachedThreshold={0.01}
-
-          // 3. Hiển thị loading xoay xoay ở dưới cùng
-          ListFooterComponent={() => (
-            loadingMore && hasMore ? (
-              <ActivityIndicator size="small" color="#6C63FF" style={{ marginVertical: 20 }} />
-            ) : null
-          )}
-
           renderItem={({ item }) => (
             <TouchableOpacity
               style={{
@@ -600,11 +586,6 @@ export default function HomeScreen({ navigation }: any) {
                 borderRadius: 12,
                 padding: 12,
                 marginBottom: 15,
-                // Đổ bóng cho card đẹp hơn
-                elevation: 2,
-                shadowColor: "#000",
-                shadowOffset: { width: 0, height: 1 },
-                shadowOpacity: 0.1,
               }}
               onPress={() => navigation.navigate("BookDetail", { id: item.id })}
             >
@@ -612,40 +593,51 @@ export default function HomeScreen({ navigation }: any) {
                 source={{ uri: item.cover_image }}
                 style={{
                   width: "100%",
-                  height: 180,
+                  height: 160,
                   borderRadius: 12,
                   marginBottom: 10,
                 }}
               />
-              <Text numberOfLines={2} style={{ fontWeight: "bold", height: 40 }}>
+              <Text numberOfLines={2} style={{ fontWeight: "bold" }}>
                 {item.title}
               </Text>
-              <Text style={{ color: "#999", fontSize: 12 }}>{item.author_name}</Text>
-              <Text style={{ marginTop: 6, color: "#6C63FF", fontWeight: "bold", fontSize: 16 }}>
+              <Text style={{ color: "#999", fontSize: 12 }}>
+                {item.author_name}
+              </Text>
+              <Text
+                style={{
+                  marginTop: 6,
+                  color: "#6C63FF",
+                  fontWeight: "bold",
+                  fontSize: 16,
+                }}
+              >
                 {Number(item.price).toLocaleString("vi-VN")}đ
               </Text>
             </TouchableOpacity>
           )}
         />
 
-        {/* LOAD MORE */}
-        {hasMore && (
-          <TouchableOpacity
-            onPress={loadAllBooks}
+        {/* LOAD MORE - Hiện vòng tròn quay (Spinner) */}
+        {loadingMore && (
+          <View
             style={{
-              backgroundColor: "#6C63FF",
-              paddingVertical: 12,
-              marginHorizontal: 20,
-              borderRadius: 12,
-              alignItems: "center",
-              marginBottom: 20,
+              paddingVertical: 40, // Tăng khoảng cách để dễ thấy vòng quay
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
           >
-            <Text style={{ color: "#fff", fontWeight: "bold" }}>
-              {loadingMore ? "Đang tải..." : "Tải thêm"}
+            {/* Đây chính là cái vòng tròn quay */}
+            <ActivityIndicator size="large" color="#6C63FF" />
+
+            <Text style={{ marginTop: 12, color: "#666", fontSize: 14 }}>
+              Đang tải thêm sách...
             </Text>
-          </TouchableOpacity>
+          </View>
         )}
+
+        {/* Khoảng trống cuối trang để không bị dính sát mép dưới */}
+        <View style={{ height: 60 }} />
       </ScrollView>
     </SafeAreaView>
   );
