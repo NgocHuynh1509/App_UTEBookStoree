@@ -295,35 +295,55 @@ exports.getOrderStatistics = (req, res) => {
     }
 
     db.query(
-        `SELECT status, SUM(total) AS total_money
+        `SELECT status,
+                COUNT(*) AS total_orders,
+                SUM(total) AS total_money
          FROM orders
          WHERE user_id = ?
          GROUP BY status`,
         [userId],
         (err, results) => {
             if (err) {
-                console.error("Lỗi SQL getOrderStatistics:", err);
-                return res.status(500).json({ error: "Lỗi cơ sở dữ liệu" });
+                console.error("Lỗi SQL:", err);
+                return res.status(500).json({ error: "Lỗi DB" });
             }
 
             let data = {
-                pending: 0,
-                shipping: 0,
-                completed: 0,
-                total: 0
+                pending: { count: 0, money: 0 },
+                shipping: { count: 0, money: 0 },
+                completed: { count: 0, money: 0 },
+                totalMoney: 0,
+                totalOrders: 0
             };
 
             results.forEach(row => {
                 if (row.status === "pending") {
-                    data.pending = row.total_money;
+                    data.pending = {
+                        count: row.total_orders,
+                        money: row.total_money
+                    };
                 } else if (row.status === "shipping") {
-                    data.shipping = row.total_money;
+                    data.shipping = {
+                        count: row.total_orders,
+                        money: row.total_money
+                    };
                 } else if (row.status === "completed") {
-                    data.completed = row.total_money;
+                    data.completed = {
+                        count: row.total_orders,
+                        money: row.total_money
+                    };
                 }
             });
 
-            data.total = data.pending + data.shipping + data.completed;
+            data.totalMoney =
+                data.pending.money +
+                data.shipping.money +
+                data.completed.money;
+
+            data.totalOrders =
+                data.pending.count +
+                data.shipping.count +
+                data.completed.count;
 
             res.json(data);
         }

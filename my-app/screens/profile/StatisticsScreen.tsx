@@ -9,22 +9,20 @@ import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useAuth } from "../../hooks/useAuth";
 import Constants from "expo-constants";
+import { PieChart } from "react-native-chart-kit";
+import { Dimensions } from "react-native";
 
 const BASE_URL = Constants.expoConfig?.extra?.BASE_URL;
+const screenWidth = Dimensions.get("window").width;
 
-// 🎨 Palette (giữ giống file bạn)
+// 🎨 Palette
 const C = {
   primary: "#1565C0",
   primaryMid: "#1E88E5",
-  primarySoft: "#E3F2FD",
-  primaryTint: "#BBDEFB",
   bg: "#F0F6FF",
-  surface: "#FFFFFF",
-  border: "#DDEEFF",
   text1: "#0D1B3E",
   text2: "#4A5980",
   text3: "#9AA8C8",
-  green: "#00897B",
 };
 
 const StatisticsScreen = () => {
@@ -32,10 +30,11 @@ const StatisticsScreen = () => {
   const navigation = useNavigation<any>();
 
   const [data, setData] = useState({
-    pending: 0,
-    shipping: 0,
-    completed: 0,
-    total: 0
+    pending: { count: 0, money: 0 },
+    shipping: { count: 0, money: 0 },
+    completed: { count: 0, money: 0 },
+    totalMoney: 0,
+    totalOrders: 0
   });
 
   const [loading, setLoading] = useState(true);
@@ -59,7 +58,16 @@ const StatisticsScreen = () => {
       );
 
       const result = await res.json();
-      setData(result || {});
+
+      // chống null crash
+      setData(result || {
+        pending: { count: 0, money: 0 },
+        shipping: { count: 0, money: 0 },
+        completed: { count: 0, money: 0 },
+        totalMoney: 0,
+        totalOrders: 0
+      });
+
     } catch (err) {
       console.error("Lỗi thống kê:", err);
     } finally {
@@ -74,11 +82,41 @@ const StatisticsScreen = () => {
     }, [user?.id])
   );
 
-  // ================= Loading =================
+  // ================= CHART =================
+  const pieData = [
+    {
+      name: "Chờ",
+      population: data.pending.count,
+      color: "#FB8C00",
+      legendFontColor: "#333",
+      legendFontSize: 13,
+    },
+    {
+      name: "Đang giao",
+      population: data.shipping.count,
+      color: "#8E24AA",
+      legendFontColor: "#333",
+      legendFontSize: 13,
+    },
+    {
+      name: "Hoàn thành",
+      population: data.completed.count,
+      color: "#43A047",
+      legendFontColor: "#333",
+      legendFontSize: 13,
+    }
+  ];
+
+  const chartConfig = {
+    backgroundGradientFrom: "#fff",
+    backgroundGradientTo: "#fff",
+    color: () => "#000",
+  };
+
+  // ================= LOADING =================
   if (loading) {
     return (
       <View style={[s.container, { justifyContent: "center", alignItems: "center" }]}>
-        <StatusBar barStyle="light-content" backgroundColor={C.primaryMid} />
         <ActivityIndicator size="large" color={C.primaryMid} />
         <Text style={{ color: C.text3, marginTop: 10 }}>
           Đang tải thống kê...
@@ -93,9 +131,6 @@ const StatisticsScreen = () => {
 
       {/* HEADER */}
       <View style={s.header}>
-        <View style={s.headerBlob1} />
-        <View style={s.headerBlob2} />
-
         <View style={s.headerTop}>
           <TouchableOpacity
             style={s.backBtn}
@@ -104,17 +139,13 @@ const StatisticsScreen = () => {
             <Ionicons name="chevron-back" size={22} color="#FFF" />
           </TouchableOpacity>
 
-          <Text style={s.headerTitle}>Thống kê chi tiêu</Text>
-
+          <Text style={s.headerTitle}>Thống kê</Text>
           <View style={{ width: 38 }} />
         </View>
 
-        <View style={s.countStrip}>
-          <Ionicons name="cash-outline" size={15} color="#FFF" />
-          <Text style={s.countTxt}>
-            Tổng chi: {data.total?.toLocaleString()} VND
-          </Text>
-        </View>
+        <Text style={s.countTxt}>
+          {data.totalOrders} đơn • {data.totalMoney.toLocaleString()} đ
+        </Text>
       </View>
 
       {/* CONTENT */}
@@ -124,31 +155,59 @@ const StatisticsScreen = () => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={fetchStatistics}
-            colors={[C.primaryMid]}
           />
         }
       >
-        {/* CARD */}
+
+        {/* CHART */}
+        <View style={s.chartCard}>
+          <Text style={s.chartTitle}>Phân bố đơn hàng</Text>
+
+          <PieChart
+            data={pieData}
+            width={screenWidth - 32}
+            height={200}
+            chartConfig={chartConfig}
+            accessor="population"
+            backgroundColor="transparent"
+            paddingLeft="10"
+            absolute
+          />
+        </View>
+
+        {/* CARDS */}
         <View style={s.card}>
-          <Text style={s.label}>⏳ Chờ xác nhận</Text>
-          <Text style={s.value}>{data.pending.toLocaleString()} đ</Text>
+          <Text style={s.label}>
+            ⏳ Chờ xác nhận ({data.pending.count} đơn)
+          </Text>
+          <Text style={s.value}>
+            {data.pending.money.toLocaleString()} đ
+          </Text>
         </View>
 
         <View style={s.card}>
-          <Text style={s.label}>🚚 Đang giao</Text>
-          <Text style={s.value}>{data.shipping.toLocaleString()} đ</Text>
+          <Text style={s.label}>
+            🚚 Đang giao ({data.shipping.count} đơn)
+          </Text>
+          <Text style={s.value}>
+            {data.shipping.money.toLocaleString()} đ
+          </Text>
         </View>
 
         <View style={s.card}>
-          <Text style={s.label}>✅ Đã giao</Text>
-          <Text style={s.value}>{data.completed.toLocaleString()} đ</Text>
+          <Text style={s.label}>
+            ✅ Đã giao ({data.completed.count} đơn)
+          </Text>
+          <Text style={s.value}>
+            {data.completed.money.toLocaleString()} đ
+          </Text>
         </View>
 
         {/* TOTAL */}
         <View style={s.totalCard}>
           <Text style={s.totalText}>Tổng chi tiêu</Text>
           <Text style={s.totalValue}>
-            {data.total.toLocaleString()} đ
+            {data.totalMoney.toLocaleString()} đ
           </Text>
         </View>
 
@@ -164,11 +223,11 @@ const s = StyleSheet.create({
 
   header: {
     backgroundColor: C.primaryMid,
-    paddingTop: Platform.OS === "android" ? (StatusBar.currentHeight || 0) + 10 : 10,
+    paddingTop: Platform.OS === "android" ? 40 : 20,
     paddingBottom: 20,
     paddingHorizontal: 16,
-    borderBottomLeftRadius: 28,
-    borderBottomRightRadius: 28,
+    borderBottomLeftRadius: 25,
+    borderBottomRightRadius: 25,
   },
 
   headerTop: {
@@ -192,18 +251,28 @@ const s = StyleSheet.create({
     alignItems: "center"
   },
 
-  countStrip: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 6
-  },
-
   countTxt: {
-    color: "#fff"
+    color: "#fff",
+    textAlign: "center"
   },
 
   scroll: {
     padding: 16
+  },
+
+  chartCard: {
+    backgroundColor: "#fff",
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 16,
+    elevation: 3,
+  },
+
+  chartTitle: {
+    fontSize: 15,
+    fontWeight: "700",
+    marginBottom: 8,
+    color: C.text1,
   },
 
   card: {
@@ -244,26 +313,6 @@ const s = StyleSheet.create({
     color: "#fff",
     fontSize: 20,
     fontWeight: "bold"
-  },
-
-  headerBlob1: {
-    position: "absolute",
-    width: 180,
-    height: 180,
-    borderRadius: 90,
-    backgroundColor: "rgba(255,255,255,0.08)",
-    top: -60,
-    right: -40,
-  },
-
-  headerBlob2: {
-    position: "absolute",
-    width: 100,
-    height: 100,
-    borderRadius: 50,
-    backgroundColor: "rgba(255,255,255,0.06)",
-    bottom: -20,
-    left: "40%",
   },
 });
 
