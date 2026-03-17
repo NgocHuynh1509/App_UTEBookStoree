@@ -186,15 +186,27 @@ export default function OrderHistory() {
         <View style={s.headerBlob1} />
         <View style={s.headerBlob2} />
 
+
+
         <View style={s.headerTop}>
+          {/* Back */}
           <TouchableOpacity
             style={s.backBtn}
             onPress={() => navigation.canGoBack() && navigation.goBack()}
           >
             <Ionicons name="chevron-back" size={22} color="#FFF" />
           </TouchableOpacity>
+
+          {/* Title */}
           <Text style={s.headerTitle}>Lịch sử đơn hàng</Text>
-          <View style={{ width: 38 }} />
+
+          {/* Statistics button */}
+          <TouchableOpacity
+            style={s.statBtn}
+            onPress={() => navigation.navigate("Statistics")}
+          >
+            <Ionicons name="stats-chart-outline" size={20} color="#FFF" />
+          </TouchableOpacity>
         </View>
 
         {/* Stats strip */}
@@ -302,6 +314,14 @@ const s = StyleSheet.create({
     borderBottomRightRadius: 28,
     overflow: "hidden",
   },
+statBtn: {
+  width: 38,
+  height: 38,
+  borderRadius: 19,
+  backgroundColor: "rgba(255,255,255,0.18)",
+  justifyContent: "center",
+  alignItems: "center",
+},
   headerBlob1: {
     position: "absolute", width: 200, height: 200, borderRadius: 100,
     backgroundColor: "rgba(255,255,255,0.08)", top: -60, right: -40,

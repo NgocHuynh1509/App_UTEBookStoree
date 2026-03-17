@@ -286,3 +286,46 @@ exports.calcTotal = async (req, res) => {
         res.status(500).json({ success: false, error: "Server error" });
     }
 };
+
+exports.getOrderStatistics = (req, res) => {
+    const { userId } = req.params;
+
+    if (!userId) {
+        return res.status(400).json({ error: "Thiếu ID người dùng" });
+    }
+
+    db.query(
+        `SELECT status, SUM(total) AS total_money
+         FROM orders
+         WHERE user_id = ?
+         GROUP BY status`,
+        [userId],
+        (err, results) => {
+            if (err) {
+                console.error("Lỗi SQL getOrderStatistics:", err);
+                return res.status(500).json({ error: "Lỗi cơ sở dữ liệu" });
+            }
+
+            let data = {
+                pending: 0,
+                shipping: 0,
+                completed: 0,
+                total: 0
+            };
+
+            results.forEach(row => {
+                if (row.status === "pending") {
+                    data.pending = row.total_money;
+                } else if (row.status === "shipping") {
+                    data.shipping = row.total_money;
+                } else if (row.status === "completed") {
+                    data.completed = row.total_money;
+                }
+            });
+
+            data.total = data.pending + data.shipping + data.completed;
+
+            res.json(data);
+        }
+    );
+};
