@@ -1,4 +1,6 @@
 const express = require('express');
+const { initSocket } = require("./config/socket");
+const http = require("http");
 const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const userRoutes = require('./routes/profileRoutes');
@@ -14,6 +16,7 @@ const couponRoutes = require("./routes/couponRoutes");
 const pointRoutes = require("./routes/pointRoutes");
 
 const app = express();
+const server = http.createServer(app);
 
 app.use(cors());
 app.use(express.json());
@@ -40,6 +43,12 @@ app.get("/", (req, res) => {
   });
 });
 
-app.listen(3000, () => {
+initSocket(server);
+
+
+//app.listen(3000, () => {
+//  console.log('Server running at http://localhost:3000');
+//});
+server.listen(3000, "0.0.0.0", () => {
   console.log('Server running at http://localhost:3000');
 });

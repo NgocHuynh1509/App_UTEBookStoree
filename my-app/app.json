@@ -7,8 +7,8 @@
     "icon": "./assets/images/icon.png",
     "userInterfaceStyle": "automatic",
     "extra": {
-      "API_URL": "http://172.16.31.71:3000/api",
-      "BASE_URL": "http://172.16.31.71:3000"
+      "API_URL": "http://10.64.68.63:3000/api",
+      "BASE_URL": "http://10.64.68.63:3000"
     },
     "ios": {
       "supportsTablet": true

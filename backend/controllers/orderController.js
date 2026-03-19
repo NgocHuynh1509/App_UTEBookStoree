@@ -229,24 +229,24 @@ exports.getOrderDetail = (req, res) => {
 
 
 // Huỷ đơn hàng
-exports.cancelOrder = (req, res) => {
-    const { orderId } = req.params;
-
-    db.query(`SELECT created_at, status FROM orders WHERE id = ?`, [orderId], (err, results) => {
-        if (err || results.length === 0) return res.status(404).json({ error: "Không tìm thấy đơn hàng" });
-
-        const { created_at, status } = results[0];
-        const diffMins = (new Date() - new Date(created_at)) / 60000;
-
-        if (diffMins > 30) return res.status(400).json({ error: "Đã quá 30 phút, bạn không thể huỷ đơn hàng này." });
-        if (status !== 'pending' && status !== 'processing') return res.status(400).json({ error: "Trạng thái hiện tại không cho phép huỷ." });
-
-        db.query(`UPDATE orders SET status = 'cancelled' WHERE id = ?`, [orderId], (err) => {
-            if (err) return res.status(500).json({ error: "Lỗi khi huỷ đơn hàng" });
-            res.json({ message: "Huỷ đơn hàng thành công" });
-        });
-    });
-};
+//exports.cancelOrder = (req, res) => {
+//    const { orderId } = req.params;
+//
+//    db.query(`SELECT created_at, status FROM orders WHERE id = ?`, [orderId], (err, results) => {
+//        if (err || results.length === 0) return res.status(404).json({ error: "Không tìm thấy đơn hàng" });
+//
+//        const { created_at, status } = results[0];
+//        const diffMins = (new Date() - new Date(created_at)) / 60000;
+//
+//        if (diffMins > 30) return res.status(400).json({ error: "Đã quá 30 phút, bạn không thể huỷ đơn hàng này." });
+//        if (status !== 'pending' && status !== 'processing') return res.status(400).json({ error: "Trạng thái hiện tại không cho phép huỷ." });
+//
+//        db.query(`UPDATE orders SET status = 'cancelled' WHERE id = ?`, [orderId], (err) => {
+//            if (err) return res.status(500).json({ error: "Lỗi khi huỷ đơn hàng" });
+//            res.json({ message: "Huỷ đơn hàng thành công" });
+//        });
+//    });
+//};
 
 
 // Tính tổng tiền — dùng db.promise() để tránh lỗi mysql2 await
@@ -348,4 +348,67 @@ exports.getOrderStatistics = (req, res) => {
             res.json(data);
         }
     );
+};
+
+const { getIO } = require("../config/socket");
+
+
+exports.cancelOrder = (req, res) => {
+  const { orderId } = req.params;
+
+  // 🔍 Lấy thông tin đơn
+  db.query(
+    `SELECT id, user_id, created_at, status FROM orders WHERE id = ?`,
+    [orderId],
+    (err, results) => {
+      if (err || results.length === 0) {
+        return res.status(404).json({ error: "Không tìm thấy đơn hàng" });
+      }
+
+      const order = results[0];
+
+      const diffMins = (new Date() - new Date(order.created_at)) / 60000;
+
+      // ❌ Quá 30 phút
+      if (diffMins > 30) {
+        return res.status(400).json({
+          error: "Đã quá 30 phút, bạn không thể huỷ đơn hàng này.",
+        });
+      }
+
+      // ❌ Sai trạng thái
+      if (order.status !== "pending" && order.status !== "processing") {
+        return res.status(400).json({
+          error: "Trạng thái hiện tại không cho phép huỷ.",
+        });
+      }
+
+      // ✅ Update trạng thái
+      db.query(
+        `UPDATE orders SET status = 'cancelled' WHERE id = ?`,
+        [orderId],
+        (err) => {
+          if (err) {
+            return res.status(500).json({ error: "Lỗi khi huỷ đơn hàng" });
+          }
+
+          // 🔥 SOCKET REALTIME
+          try {
+            const io = getIO();
+
+            io.to(order.user_id.toString()).emit("order_cancelled", {
+              orderId: order.id,
+              message: `Đơn hàng #${order.id} đã bị huỷ`,
+            });
+
+            console.log("📡 Đã gửi socket tới user:", order.user_id);
+          } catch (socketErr) {
+            console.log("⚠️ Lỗi socket:", socketErr.message);
+          }
+
+          res.json({ message: "Huỷ đơn hàng thành công" });
+        }
+      );
+    }
+  );
 };

@@ -12,4 +12,5 @@ router.get('/order-detail/:orderId', orderController.getOrderDetail);
 router.put('/cancel-order/:orderId', orderController.cancelOrder);
 router.post("/calc-total", orderController.calcTotal);
 router.get("/statistics/:userId", orderController.getOrderStatistics);
+router.put("/cancel/:id", orderController.cancelOrder);
 module.exports = router;
